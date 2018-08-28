@@ -14,12 +14,12 @@
 
   ### via curl
   ```bash
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/tuantranf/kubeb/master/tools/install.sh)"
+  sh -c "$(curl -fsSL https://raw.githubusercontent.com/podder-ai/kubeb/master/tools/install.sh)"
   ```
 
   ### via wget
   ```bash
-  $ sh -c "$(wget https://raw.githubusercontent.com/tuantranf/kubeb/master/tools/install.sh -O -)"
+  $ sh -c "$(wget https://raw.githubusercontent.com/podder-ai/kubeb/master/tools/install.sh -O -)"
   ```
   
   ### Uninstall

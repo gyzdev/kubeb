@@ -31,12 +31,6 @@ main() {
   # precedence over umasks except for filesystems mounted with option "noacl".
   umask g-w,o-w
 
-  printf "${BLUE}Cloning Kubeb...${NORMAL}\n"
-  command -v git >/dev/null 2>&1 || {
-    echo "Error: git is not installed"
-    exit 1
-  }
-
   if [ ! -n "$KUBEB" ]; then
     KUBEB=~/.kubeb
   fi
@@ -46,6 +40,19 @@ main() {
     printf "You'll need to remove $KUBEB if you want to re-install.\n"
     exit
   fi
+
+  printf "${BLUE}Checking requirement libraries for Kubeb...${NORMAL}\n"
+  command -v python3 >/dev/null 2>&1 || {
+    echo "Error: python3 is not installed"
+    exit 1
+  }
+
+  command -v git >/dev/null 2>&1 || {
+    echo "Error: git is not installed"
+    exit 1
+  }
+
+  printf "${BLUE}Cloning Kubeb...${NORMAL}\n"
   
   env git clone --depth=1 https://github.com/tuantranf/kubeb.git "$KUBEB" || {
     printf "Error: git clone of Kubeb repo failed\n"
@@ -60,16 +67,12 @@ main() {
     exit 1
   }
 
-  command -v python3 >/dev/null 2>&1 || {
-    echo "Error: python3 is not installed"
-    exit 1
-  }
-
   python3 -m venv .env3
   source .env3/bin/activate
   pip install -r requirements.txt
   pip install --editable .
 
+   printf "${BLUE}Adding Kubeb shortcut to /usr/local/bin/kubeb ${NORMAL}\n"
   ln -sfn "$KUBEB/.env3/bin/kubeb" /usr/local/bin/kubeb
 
   cd "$ORIGIN_DIR"
