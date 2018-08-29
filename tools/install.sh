@@ -54,7 +54,7 @@ main() {
 
   printf "${BLUE}Cloning Kubeb...${NORMAL}\n"
   
-  env git clone --depth=1 https://github.com/tuantranf/kubeb.git "$KUBEB" || {
+  env git clone --depth=1 https://github.com/podder-ai/kubeb.git "$KUBEB" || {
     printf "Error: git clone of Kubeb repo failed\n"
     exit 1
   }
