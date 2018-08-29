@@ -94,7 +94,7 @@ def generate_docker_file(template):
 
 
 def generate_helm_file(template, ext_template, image, tag, env):
-    if ext_template:
+    if not ext_template:
         template_dir = template_directory + template
     else:
         template_dir = ext_template_directory + template
@@ -122,6 +122,7 @@ def generate_helm_file(template, ext_template, image, tag, env):
     with open(helm_value_file, "w") as fh:
         fh.write(content)
 
+    print("generated helm-values.yaml in %s" % helm_value_file)
 
 def remove_docker_file():
     if docker_file_exist():
