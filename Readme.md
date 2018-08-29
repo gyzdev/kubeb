@@ -259,6 +259,7 @@ tree libs/template/laravel
 │   └── vhost.conf
 ├── info.yaml # helm chart information
 └── helm-values.yaml # helm chart configuration
+└── dotenv # helm chart values
 ```
 
 ```bash

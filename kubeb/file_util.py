@@ -209,7 +209,7 @@ def generate_environment_file(env, template):
     work_dir = os.getcwd()
     template_dir = template_directory + template
 
-    docker_file_src = os.path.join(template_dir, '.env')
+    docker_file_src = os.path.join(template_dir, 'dotenv')
     docker_file_dst = os.path.join(work_dir, '.env.' + env)
     shutil.copy(docker_file_src, docker_file_dst)
 
