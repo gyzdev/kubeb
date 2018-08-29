@@ -2,6 +2,9 @@ import os
 import time
 
 import click
+import click_spinner
+spinner = click_spinner.Spinner()
+
 # from dotenv import dotenv_values
 
 from kubeb.core import Kubeb, pass_kubeb
@@ -105,10 +108,13 @@ def build(kubeb, message):
         image = config.get_image()
         tag = 'v' + str(int(round(time.time() * 1000)))
 
+        kubeb.log('Building docker image ...')
+        spinner.start()
         status, output, err = command.run(command.build_command(image, tag))
         if status != 0:
             kubeb.log('Docker image build failed', err)
             return
+        spinner.stop()
 
         kubeb.log(output)
         kubeb.log('Docker image build succeed.')
@@ -139,10 +145,13 @@ def install(kubeb, version):
     else:
         file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), "latest", config.get_current_environment())
 
+    kubeb.log('Installing application ...')
+    spinner.start()
     status, output, err = command.run(command.install_command())
     if status != 0:
         kubeb.log('Install application failed', err)
         return
+    spinner.stop()
 
     kubeb.log(output)
     kubeb.log('Install application succeed.')
