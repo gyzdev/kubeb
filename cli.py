@@ -135,9 +135,9 @@ def install(kubeb, version):
             return
 
         kubeb.log('Deploying version: %s', deploy_version["tag"])
-        file_util.generate_helm_file(config.get_template(), config.get_image(), config.get_ext_template(), deploy_version["tag"], config.get_current_environment())
+        file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), deploy_version["tag"], config.get_current_environment())
     else:
-        file_util.generate_helm_file(config.get_template(), config.get_image(), config.get_ext_template(), "latest", config.get_current_environment())
+        file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), "latest", config.get_current_environment())
 
     status, output, err = command.run(command.install_command())
     if status != 0:
