@@ -5,11 +5,11 @@ image:
   tag: {{ tag }}
   pullPolicy: IfNotPresent
 {% if env_vars and env_vars.items() | length > 0 %}
-env:
-{% for key, value in env_vars.items() %}
-  - name: {{ key }}
-    value: {{ value }}
-{% endfor %}
+  envVars:
+  {% for key, value in env_vars.items() %}
+    - name: "{{ key }}"
+        value: "{{ value }}"
+  {% endfor %}
 {% endif %}
 
 service:
