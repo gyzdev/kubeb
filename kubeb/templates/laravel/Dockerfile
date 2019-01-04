@@ -1,41 +1,53 @@
-FROM centos/httpd:latest
+FROM php:7.1-apache
+LABEL maintainer="podderai"
 
-MAINTAINER kubeb
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    mysql-client \
+    libpng-dev \
+    libjpeg62-turbo-dev \
+    libfreetype6-dev \
+    locales \
+    zip \
+    jpegoptim optipng pngquant gifsicle \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+# Installing extensions
+RUN docker-php-ext-install pdo_mysql mbstring zip exif pcntl bcmath opcache \
+    && docker-php-ext-configure gd --with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/ \
+    && docker-php-ext-install gd
 
-# Update and install latest packages and prerequisites
-RUN yum makecache fast && yum -y --setopt=tsflags=nodocs update \
-    && yum -y --setopt=tsflags=nodocs install https://mirror.webtatic.com/yum/el7/webtatic-release.rpm \
-    && yum -y --setopt=tsflags=nodocs install git php71w php71w-cli php71w-common php71w-opcache php71w-mysql php71w-mbstring php71w-xml php71w-gd php71w-pdo
+# Installing composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Install imagick
-RUN yum -y install php71w-pecl-imagick ImageMagick ImageMagick-devel ImageMagick-perl
+# Setting locales
+RUN echo en_US.UTF-8 UTF-8 > /etc/locale.gen && locale-gen
 
-# Install php composer
-RUN curl -sS https://getcomposer.org/installer | php \
-    && mv /composer.phar /usr/bin/composer \
-    && chmod +x /usr/bin/composer
-
-RUN yum -y update
-RUN yum clean all
-
-ADD docker/vhost.conf /etc/httpd/conf.d/vhost.conf
-
-ADD docker/entrypoint.sh /entrypoint.sh
-
-RUN chmod +x /entrypoint.sh
+# Allow container to write on host
+RUN usermod -u 1000 www-data
 
 WORKDIR /var/www/html
 
-COPY . .
+COPY ./ /var/www/html/
 
-RUN chown -R apache:apache /var/www/html
+RUN rm -rf ./vendor
 
-RUN composer install
+# 1 - setup https to speedup composer. see: https://debril.org/how-to-fix-composers-slowness.html
+RUN composer config --global repo.packagist composer https://packagist.org
 
-ENTRYPOINT ["/entrypoint.sh"]
+# 2 - speed up composer with this library that do parallel downloads
+RUN composer -vvv global require hirak/prestissimo
 
-CMD ["/usr/sbin/httpd", "-DFOREGROUND"]
+# fix and update
+RUN composer self-update
 
-EXPOSE 80
+RUN composer install --quiet
+
+# apache enable mod_rewrite
+RUN a2enmod rewrite
+
+ENV APACHE_RUN_USER www-data
+ENV APACHE_RUN_GROUP www-data
+ENV APACHE_LOG_DIR /var/log/apache2
+ENV APACHE_LOCK_DIR /var/lock/apache2
+ENV APACHE_PID_FILE /var/run/apache2.pid
