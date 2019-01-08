@@ -3,6 +3,8 @@
 
 .env
 
+cli/env/
+
 # python bytecode files
 *.pyc
 __pycache__/
