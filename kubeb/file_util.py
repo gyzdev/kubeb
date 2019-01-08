@@ -3,13 +3,12 @@ import shutil
 import codecs
 import yaml
 
-from dotenv import dotenv_values
-
 from jinja2 import Environment, FileSystemLoader
 
 kubeb_directory = '.kubeb' + os.path.sep
 config_file = kubeb_directory + "config.yml"
 helm_value_file = kubeb_directory + "helm-values.yml"
+helm_chart_dir = kubeb_directory + "laravel-rocket"
 install_script_file = kubeb_directory + "install.sh"
 uninstall_script_file = kubeb_directory + "uninstall.sh"
 
@@ -87,10 +86,9 @@ def generate_docker_file(template):
     ignore_dst = os.path.join(work_dir, '.dockerignore')
     shutil.copy(ignore_src, ignore_dst)
 
-    # copy docker-data file
-    if os.path.isdir(docker_directory):
-        shutil.rmtree(docker_directory)
-    shutil.copytree(os.path.join(template_dir, 'docker'), docker_directory)
+    # copy laravel-rocket
+    if os.path.isdir(os.path.join(template_dir, 'laravel-rocket')):
+        shutil.copytree(os.path.join(template_dir, 'laravel-rocket'), helm_chart_dir)
 
 
 def generate_helm_file(template, ext_template, image, tag, env):
@@ -104,17 +102,19 @@ def generate_helm_file(template, ext_template, image, tag, env):
         print("can't read %s - it doesn't exist." % dotenv_path)
         return None
 
-    parsed_dict = dotenv_values(dotenv_path)
+    env_file_dst = os.path.join(helm_chart_dir, 'app.env')
+    shutil.copy(dotenv_path, env_file_dst)
 
-    env_vars = dict()
-    for key, value in parsed_dict.items():
-        if value and value != '' and value != 'null':
-            env_vars[key] = value
+    # parsed_dict = dotenv_values(dotenv_path)
+    #
+    # env_vars = dict()
+    # for key, value in parsed_dict.items():
+    #     if value and value != '' and value != 'null':
+    #         env_vars[key] = value
 
     values = dict(
         image=image,
-        tag=tag,
-        env_vars=env_vars
+        tag=tag
     )
 
     jinja2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
@@ -131,10 +131,6 @@ def remove_docker_file():
     docker_ignore = os.path.join(os.getcwd(), '.dockerignore')
     os.remove(docker_ignore)
 
-    directory = os.path.join(os.getcwd(), 'docker')
-    if os.path.isdir(directory):
-        shutil.rmtree(directory)
-
 
 def clean_up():
     remove_config_dir()
@@ -150,11 +146,12 @@ def generate_script_file(name, template):
     with open(install_script_file, "w") as file:
         install_commands = [_shebang]
         if not official:
-            repository = get_value('repository', chart_info_file)
-            install_commands.append("helm repo add " + repository["name"] + " " + repository["url"])
-            install_commands.append("helm repo update")
+            install_commands.append(
+                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + helm_chart_dir + " --wait")
+        else:
+            install_commands.append(
+                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + chart_name + " --wait")
 
-        install_commands.append("helm upgrade --install --force " + name + " -f " + helm_value_file + " " + chart_name + " --wait")
         file.write("\n".join(install_commands))
 
     # uninstall script
@@ -194,7 +191,6 @@ def get_value(key_name, file, default=_marker):
 
     return value
 
-
 def get_yaml_dict(filename):
     try:
         with codecs.open(filename, 'r', encoding='utf8') as f:
@@ -230,3 +226,12 @@ def add_ext_template(name, path):
         shutil.rmtree(template_dir)
 
     shutil.copytree(path, template_dir)
+
+
+def clean_up_after_install():
+    try:
+        env_file = os.path.join(helm_chart_dir, 'app.env')
+        if os.path.isfile(env_file):
+            shutil.rmtree(env_file)
+    except:
+        pass

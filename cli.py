@@ -59,6 +59,8 @@ def init(kubeb, name, user, template, local, image, env, force):
 
     ext_template = file_util.is_ext_template(template)
 
+    file_util.clean_up()
+
     file_util.generate_config_file(name, user, template, ext_template, image, local, env)
     file_util.generate_script_file(name, template)
     file_util.generate_environment_file(env, template)
@@ -150,7 +152,10 @@ def install(kubeb, version):
     status, output, err = command.run(command.install_command())
     if status != 0:
         kubeb.log('Install application failed', err)
-        return
+        file_util.clean_up_after_install()
+        exit(1)
+
+    file_util.clean_up_after_install()
     spinner.stop()
 
     kubeb.log(output)
