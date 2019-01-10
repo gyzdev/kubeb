@@ -5,11 +5,12 @@ with open("Readme.md", "r") as fh:
 
 setuptools.setup(
     name='kubeb',
-    version='0.0.4',
+    version='0.0.5',
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
     packages=setuptools.find_packages(),
     include_package_data=True,
+    long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/podder-ai/kubeb",
     classifiers=[
