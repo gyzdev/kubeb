@@ -1,17 +1,17 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("Readme.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name='kubeb',
-    version='0.0.2',
+    version='0.0.4',
     author="podder-ai",
-    description="A small tool to deploy app to Kubernetes",
+    description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
     packages=setuptools.find_packages(),
     include_package_data=True,
     long_description_content_type="text/markdown",
-    url="https://github.com/podderai/kubeb",
+    url="https://github.com/podder-ai/kubeb",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -25,6 +25,6 @@ setuptools.setup(
         'click-spinner',
     ],
     entry_points={
-        'console_scripts': ['kubeb=cli:cli'],
+        'console_scripts': ['kubeb=kubeb.main:cli'],
     }
 )
