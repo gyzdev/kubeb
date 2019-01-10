@@ -1,0 +1,60 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "laravel.fullname" . }}
+  labels:
+    app: {{ template "laravel.name" . }}
+    chart: {{ template "laravel.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "laravel.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "laravel.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: {{ .Release.Name }}-{{ template "laravel.name" . }}-env
+          secret:
+            secretName: {{ .Release.Name }}-{{ template "laravel.name" . }}-{{ .Release.Time.Seconds }}-env
+        - name: apache-conf
+          configMap:
+            name: {{ template "laravel.fullname" . }}-{{ .Release.Time.Seconds }}-apache
+            items:
+            - key: vhost.conf
+              path: vhost.conf
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-{{ template "laravel.name" . }}-env
+              mountPath: /var/www/html/.env
+              subPath: .env
+            - name: apache-conf
+              mountPath: /etc/apache2/sites-enabled/vhost.conf
+              subPath: vhost.conf
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
