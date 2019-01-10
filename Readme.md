@@ -1,28 +1,19 @@
 # Kubeb: Kubernetes deploy cli
 
- Kubeb (Cubeb or Cubeba) provide CLI to build and deploy a web application to Kubernetes environment
+ Kubeb (Cubeb or Cubeba) provide CLI to build and deploy a application to Kubernetes environment
  Kubeb use Docker & Helm chart for Kubernetes deployment
+
+## Requirement
+
+- Python 3
 
 ## Install
 
-  Kubeb is installed by running one of the following commands in your terminal. You can install this via the command-line with either curl or wget.
+- Install via pip:
 
-  ### Requirement
-  
-  - Git
-  - Python 3
-
-  ### via curl
-  ```bash
-  sh -c "$(curl -fsSL https://raw.githubusercontent.com/podder-ai/kubeb/master/tools/install.sh)"
-  ```
-
-  ### via wget
-  ```bash
-  $ sh -c "$(wget https://raw.githubusercontent.com/podder-ai/kubeb/master/tools/install.sh -O -)"
-  ```
-  
-  ### Uninstall
+```bash
+$ pip install -U kubeb
+```
 
 ## TL;DR;
 
