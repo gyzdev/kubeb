@@ -1,48 +1,39 @@
 apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
-  name: {{ template "laravel-rocket.fullname" . }}
+  name: {{ template "podder-task-bean.fullname" . }}
   labels:
-    app: {{ template "laravel-rocket.name" . }}
-    chart: {{ template "laravel-rocket.chart" . }}
+    app: {{ template "podder-task-bean.name" . }}
+    chart: {{ template "podder-task-bean.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "laravel-rocket.name" . }}
+      app: {{ template "podder-task-bean.name" . }}
       release: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ template "laravel-rocket.name" . }}
+        app: {{ template "podder-task-bean.name" . }}
         release: {{ .Release.Name }}
     spec:
       volumes:
-        - name: {{ .Release.Name }}-{{ template "laravel-rocket.name" . }}-env
+        - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
           secret:
-            secretName: {{ .Release.Name }}-{{ template "laravel-rocket.name" . }}-{{ .Release.Time.Seconds }}-env
-        - name: apache-conf
-          configMap:
-            name: {{ template "laravel-rocket.fullname" . }}-{{ .Release.Time.Seconds }}-apache
-            items:
-            - key: vhost.conf
-              path: vhost.conf
+            secretName: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-{{ .Release.Time.Seconds }}-env
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
           volumeMounts:
-            - name: {{ .Release.Name }}-{{ template "laravel-rocket.name" . }}-env
-              mountPath: /var/www/html/.env
+            - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
+              mountPath: /usr/local/poc_base/.env
               subPath: .env
-            - name: apache-conf
-              mountPath: /etc/apache2/sites-enabled/vhost.conf
-              subPath: vhost.conf
           ports:
-            - name: http
-              containerPort: 80
+            - name: grpc
+              containerPort: {{ .Values.service.port }}
               protocol: TCP
           resources:
 {{ toYaml .Values.resources | indent 12 }}

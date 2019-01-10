@@ -26,7 +26,7 @@ def cli(ctx):
               prompt='Maintainer name',
               help='Maintainer name.')
 @click.option('--template', '-t',
-              default='laravel',
+              default='laravel|podder-task-bean',
               prompt='Release template',
               help='Release template name.')
 @click.option('--image',
@@ -37,36 +37,29 @@ def cli(ctx):
               default='local',
               prompt='Environment name',
               help='Environment name.')
-@click.option('--local',
-              is_flag=True,
-              help='Using local docker image.')
 @click.option('--force',
               is_flag=True,
               help='Overwrite config file.')
 @pass_kubeb
-def init(kubeb, name, user, template, local, image, env, force):
+def init(kubeb, name, user, template, image, env, force):
     """ Init kubeb configuration
         Generate config, script files
-        Generate Docker stuff if use --local option
     """
     if file_util.config_file_exist() and force is False:
         kubeb.log('Kubeb config found. Please update config file or use --force option')
         return
 
-    if (not file_util.template_exist(template)):
+    if not file_util.template_exist(template):
         kubeb.log('Kubeb template not found. Please check template name')
         return
 
     ext_template = file_util.is_ext_template(template)
 
     file_util.clean_up()
-
-    file_util.generate_config_file(name, user, template, ext_template, image, local, env)
+    file_util.generate_config_file(name, user, template, ext_template, image, env)
     file_util.generate_script_file(name, template)
     file_util.generate_environment_file(env, template)
-
-    if local:
-        file_util.generate_docker_file(template)
+    file_util.generate_docker_file(template)
 
     kubeb.log('Kubeb config file generated in %s', click.format_filename(file_util.config_file))
 
@@ -106,22 +99,28 @@ def build(kubeb, message):
     else:
         msg = '\n'.join(message)
 
-    if config.get_local():
-        image = config.get_image()
-        tag = 'v' + str(int(round(time.time() * 1000)))
+    image = config.get_image()
+    tag = 'v' + str(int(round(time.time() * 1000)))
 
-        kubeb.log('Building docker image ...')
-        spinner.start()
-        status, output, err = command.run(command.build_command(image, tag))
-        if status != 0:
-            kubeb.log('Docker image build failed', err)
-            return
-        spinner.stop()
+    kubeb.log('Building docker image ...')
+    spinner.start()
+    status, output, err = command.run(command.build_command(image, tag))
+    if status != 0:
+        kubeb.log('Docker image build failed', err)
+        return
+    spinner.stop()
 
-        kubeb.log(output)
-        kubeb.log('Docker image build succeed.')
+    spinner.start()
+    status, output, err = command.run(command.push_command(image, tag))
+    if status != 0:
+        kubeb.log('Docker image push failed', err)
+        return
+    spinner.stop()
 
-        config.add_version(tag, msg)
+    kubeb.log(output)
+    kubeb.log('Docker image build succeed.')
+
+    config.add_version(tag, msg)
 
 @cli.command()
 @click.option('--version', '-v',
@@ -136,26 +135,23 @@ def install(kubeb, version):
         kubeb.log('Kubeb config file not found')
         return
 
-    if config.get_local():
-        deploy_version = config.get_version(version)
-        if not deploy_version:
-            kubeb.log('No deployable version found')
-            return
+    deploy_version = config.get_version(version)
+    if not deploy_version:
+        kubeb.log('No deployable version found')
+        return
 
-        kubeb.log('Deploying version: %s', deploy_version["tag"])
-        file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), deploy_version["tag"], config.get_current_environment())
-    else:
-        file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), "latest", config.get_current_environment())
+    kubeb.log('Deploying version: %s', deploy_version["tag"])
+    file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(), deploy_version["tag"], config.get_current_environment())
 
     kubeb.log('Installing application ...')
     spinner.start()
     status, output, err = command.run(command.install_command())
     if status != 0:
         kubeb.log('Install application failed', err)
-        file_util.clean_up_after_install()
+        file_util.clean_up_after_install(config.get_template())
         exit(1)
 
-    file_util.clean_up_after_install()
+    file_util.clean_up_after_install(config.get_template())
     spinner.stop()
 
     kubeb.log(output)
