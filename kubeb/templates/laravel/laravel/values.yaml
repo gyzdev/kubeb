@@ -6,12 +6,12 @@ replicaCount: 1
 
 app:
   # please update your docker image
-  repository: {{ image }}
-  tag: {{ tag }}
+  repository: chart-example
+  tag: latest
   pullPolicy: Always
   # please .env for environment variables
   envFilePath: "app.env"
-
+  
 
 service:
   type: ClusterIP
@@ -19,7 +19,7 @@ service:
 
 ingress:
   enabled: false
-  annotations:
+  annotations: 
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   path: /

@@ -1,4 +1,4 @@
-# Default values for laravel.
+# Default values for podder-task-bean.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -6,16 +6,16 @@ replicaCount: 1
 
 app:
   # please update your docker image
-  repository: {{ image }}
-  tag: {{ tag }}
+  repository: chart-example
+  tag: latest
   pullPolicy: Always
   # please .env for environment variables
   envFilePath: "app.env"
-
+  
 
 service:
   type: ClusterIP
-  port: 80
+  port: 50051
 
 ingress:
   enabled: false

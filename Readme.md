@@ -23,7 +23,7 @@ $ kubeb init --name sample --template laravel --local
 # Build application
 $ kubeb build -m 'release version 1'
 # Deploy application
-$ kubeb install
+$ kubeb deploy
 ```
 
 ## Command
@@ -40,8 +40,8 @@ $ kubeb install
       destroy    Remove all kubeb configuration
       info       Show current configuration
       init       Init kubeb configuration Generate config,...
-      install    Install current application to Kubernetes...
-      uninstall  Uninstall current application from Kubernetes
+      deploy     Install current application to Kubernetes...
+      delete     Uninstall current application from Kubernetes
       version    Show current application versions
   ```
 
@@ -95,9 +95,9 @@ Options:
 Using --version option to specify application version. If version is not specified, Kubeb will use the latest version
 You can see version list by `kubeb version` command
 ```bash
-kubeb install --help
+kubeb deploy --help
 
-Usage: kubeb install [OPTIONS]
+Usage: kubeb deploy [OPTIONS]
 
   Install current application to Kubernetes Generate Helm chart value file
   with docker image version If version is not specified, will get the latest
@@ -111,9 +111,9 @@ Options:
 ## Uninstall your application from Kubernetes
 
 ```bash
-kubeb uninstall --help
+kubeb delete --help
 
-Usage: kubeb uninstall [OPTIONS]
+Usage: kubeb delete [OPTIONS]
 
   Uninstall current application from Kubernetes
 
@@ -186,7 +186,7 @@ $ kubeb version
 ### Deploy application with specified version
 
 ```bash
-$ kubeb install --version v1534975136422
+$ kubeb deploy --version v1534975136422
 
 Deploying version: v1534975136422
 ....
@@ -270,4 +270,3 @@ Options:
 - [ ] Using Kubernetes namespace for each environment
 - [ ] Refactor code: use class in config, file_utils, core, command
 - [ ] Refactor command: run python script instead of Shell script (install.sh, uninstall.sh)
-- [ ] Publish library: user can install using pip install & Move kubeb to bin/kubeb

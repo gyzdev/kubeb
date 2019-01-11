@@ -1,0 +1,51 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "podder-task-bean.fullname" . }}
+  labels:
+    app: {{ template "podder-task-bean.name" . }}
+    chart: {{ template "podder-task-bean.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "podder-task-bean.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "podder-task-bean.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
+          secret:
+            secretName: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-{{ .Release.Time.Seconds }}-env
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
+              mountPath: /usr/local/poc_base/.env
+              subPath: .env
+          ports:
+            - name: grpc
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

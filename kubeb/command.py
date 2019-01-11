@@ -9,6 +9,10 @@ def build_command(image, tag):
     return "docker build -t " + image + ':' + tag + ' ' + os.getcwd()
 
 
+def push_command(image, tag):
+    return "docker push " + image + ':' + tag
+
+
 def install_command():
     return "bash " + file.install_script_file
 

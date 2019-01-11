@@ -8,7 +8,6 @@ from jinja2 import Environment, FileSystemLoader
 kubeb_directory = '.kubeb' + os.path.sep
 config_file = kubeb_directory + "config.yml"
 helm_value_file = kubeb_directory + "helm-values.yml"
-helm_chart_dir = kubeb_directory + "laravel-rocket"
 install_script_file = kubeb_directory + "install.sh"
 uninstall_script_file = kubeb_directory + "uninstall.sh"
 
@@ -48,7 +47,10 @@ def get_template_directory(template, external):
     else:
         return template_directory + template
 
-def generate_config_file(name, user, template, ext_template, image, local, env):
+def get_helm_chart_dir(template):
+    return kubeb_directory + template
+
+def generate_config_file(name, user, template, ext_template, image, env):
     init_config_dir()
 
     values = dict(
@@ -57,7 +59,6 @@ def generate_config_file(name, user, template, ext_template, image, local, env):
         ext_template=ext_template,
         user=user,
         image=image,
-        local=local,
     )
 
     with open(config_file, "w") as fh:
@@ -78,17 +79,17 @@ def generate_docker_file(template):
     template_dir = template_directory + template
 
     docker_file_src = os.path.join(template_dir, 'Dockerfile')
-    docker_file_dst = os.path.join(work_dir, 'Dockerfile')
-    shutil.copy(docker_file_src, docker_file_dst)
+    if os.path.isfile(docker_file_src):
+        docker_file_dst = os.path.join(work_dir, 'Dockerfile')
+        shutil.copy(docker_file_src, docker_file_dst)
 
-    # .dockerignore
     ignore_src = os.path.join(template_dir, '.dockerignore')
-    ignore_dst = os.path.join(work_dir, '.dockerignore')
-    shutil.copy(ignore_src, ignore_dst)
+    if os.path.isfile(ignore_src):
+        ignore_dst = os.path.join(work_dir, '.dockerignore')
+        shutil.copy(ignore_src, ignore_dst)
 
-    # copy laravel-rocket
-    if os.path.isdir(os.path.join(template_dir, 'laravel-rocket')):
-        shutil.copytree(os.path.join(template_dir, 'laravel-rocket'), helm_chart_dir)
+    if os.path.isdir(os.path.join(template_dir, template)):
+        shutil.copytree(os.path.join(template_dir, template), get_helm_chart_dir(template))
 
 
 def generate_helm_file(template, ext_template, image, tag, env):
@@ -102,7 +103,7 @@ def generate_helm_file(template, ext_template, image, tag, env):
         print("can't read %s - it doesn't exist." % dotenv_path)
         return None
 
-    env_file_dst = os.path.join(helm_chart_dir, 'app.env')
+    env_file_dst = os.path.join(get_helm_chart_dir(template), 'app.env')
     shutil.copy(dotenv_path, env_file_dst)
 
     # parsed_dict = dotenv_values(dotenv_path)
@@ -124,18 +125,9 @@ def generate_helm_file(template, ext_template, image, tag, env):
 
     print("generated helm-values.yaml in %s" % helm_value_file)
 
-def remove_docker_file():
-    if docker_file_exist():
-        os.remove(docker_file)
-
-    docker_ignore = os.path.join(os.getcwd(), '.dockerignore')
-    os.remove(docker_ignore)
-
 
 def clean_up():
     remove_config_dir()
-    remove_docker_file()
-
 
 def generate_script_file(name, template):
     chart_info_file = os.path.join(template_directory + template, "info.yaml")
@@ -147,7 +139,7 @@ def generate_script_file(name, template):
         install_commands = [_shebang]
         if not official:
             install_commands.append(
-                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + helm_chart_dir + " --wait")
+                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + get_helm_chart_dir(template) + " --wait")
         else:
             install_commands.append(
                 "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + chart_name + " --wait")
@@ -228,9 +220,9 @@ def add_ext_template(name, path):
     shutil.copytree(path, template_dir)
 
 
-def clean_up_after_install():
+def clean_up_after_install(template):
     try:
-        env_file = os.path.join(helm_chart_dir, 'app.env')
+        env_file = os.path.join(get_helm_chart_dir(template), 'app.env')
         if os.path.isfile(env_file):
             shutil.rmtree(env_file)
     except:

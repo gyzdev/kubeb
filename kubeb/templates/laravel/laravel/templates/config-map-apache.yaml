@@ -3,10 +3,10 @@ kind: ConfigMap
 metadata:
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
-  name: {{ template "laravel-rocket.fullname" . }}-{{ .Release.Time.Seconds }}-apache
+  name: {{ template "laravel.fullname" . }}-{{ .Release.Time.Seconds }}-apache
   labels:
-    app: {{ template "laravel-rocket.name" . }}
-    chart: {{ template "laravel-rocket.chart" . }}
+    app: {{ template "laravel.name" . }}
+    chart: {{ template "laravel.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
