@@ -17,8 +17,8 @@ def helm_install_command(name, template):
     return "helm upgrade --install --force " + name + " -f .kubeb/helm-values.yml .kubeb/" + template + " --wait"
 
 
-def helm_uninstall_command():
-    return "bash " + file.uninstall_script_file
+def helm_uninstall_command(name):
+    return "helm delete --purge " + name
 
 
 def run(command):
