@@ -31,7 +31,6 @@ $ kubeb deploy
 ### Podder task bean deployment
 
 ```bash
-```
 # init
 $ kubeb init --name sample-task --template podder-task-bean --force
 
