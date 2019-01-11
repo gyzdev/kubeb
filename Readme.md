@@ -17,6 +17,8 @@ $ pip install -U kubeb
 
 ## TL;DR;
 
+### Laravel deployment
+
 ```bash
 # Init application
 $ kubeb init --name sample --template laravel --local
@@ -24,6 +26,26 @@ $ kubeb init --name sample --template laravel --local
 $ kubeb build -m 'release version 1'
 # Deploy application
 $ kubeb deploy
+```
+
+### Podder task bean deployment
+
+```bash
+```
+# init
+$ kubeb init --name sample-task --template podder-task-bean --force
+
+# docker image build & publish
+$ kubeb build -m test
+
+# check version
+$ kubeb version
+
+# deploy
+$ kubeb deploy
+
+# delete
+$ kubeb delete
 ```
 
 ## Command
@@ -219,7 +241,7 @@ Visit http://127.0.0.1:8080 to use your application"
 ### Uninstall application
 
 ```bash
-$ kubeb uninstall
+$ kubeb delete
 
 Do you want to continue? [y/N]: y
 release "sample" deleted
@@ -269,4 +291,3 @@ Options:
 ## Todo
 - [ ] Using Kubernetes namespace for each environment
 - [ ] Refactor code: use class in config, file_utils, core, command
-- [ ] Refactor command: run python script instead of Shell script (install.sh, uninstall.sh)

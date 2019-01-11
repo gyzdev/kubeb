@@ -5,7 +5,7 @@ with open("Readme.md", "r") as fh:
 
 setuptools.setup(
     name='kubeb',
-    version='0.0.5',
+    version='0.0.6',
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
     packages=setuptools.find_packages(),
