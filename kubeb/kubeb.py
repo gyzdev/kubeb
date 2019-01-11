@@ -72,14 +72,14 @@ class Kubeb:
 
         self.log('Building docker image ...')
         spinner.start()
-        status, output, err = command.run(command.build_command(image, tag))
+        status, output, err = command.run(command.docker_build_command(image, tag))
         if status != 0:
             self.log('Docker image build failed', err)
             return
         spinner.stop()
 
         spinner.start()
-        status, output, err = command.run(command.push_command(image, tag))
+        status, output, err = command.run(command.docker_push_command(image, tag))
         if status != 0:
             self.log('Docker image push failed', err)
             return
@@ -110,7 +110,7 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status, output, err = command.run(command.install_command())
+        status, output, err = command.run(command.helm_install_command(config.get_name(), config.get_template()))
         if status != 0:
             self.log('Install application failed', err)
             file_util.clean_up_after_install(config.get_template())
@@ -129,7 +129,7 @@ class Kubeb:
             self.log('Kubeb config file not found')
             return
 
-        status, output, err = command.run(command.uninstall_command())
+        status, output, err = command.run(command.helm_uninstall_command(config.get_name()))
         if status != 0:
             self.log('Uninstall application failed', err)
             return

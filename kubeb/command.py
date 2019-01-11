@@ -5,19 +5,19 @@ import subprocess
 from . import file_util as file
 
 
-def build_command(image, tag):
+def docker_build_command(image, tag):
     return "docker build -t " + image + ':' + tag + ' ' + os.getcwd()
 
 
-def push_command(image, tag):
+def docker_push_command(image, tag):
     return "docker push " + image + ':' + tag
 
 
-def install_command():
-    return "bash " + file.install_script_file
+def helm_install_command(name, template):
+    return "helm upgrade --install --force " + name + " -f .kubeb/helm-values.yml .kubeb/" + template + " --wait"
 
 
-def uninstall_command():
+def helm_uninstall_command():
     return "bash " + file.uninstall_script_file
 
 

@@ -63,6 +63,7 @@ def get_env(name):
 
     return environment
 
+
 def add_environement(env):
     environments = file_util.get_value('environments', file_util.config_file)
     if not environments:
@@ -73,6 +74,7 @@ def add_environement(env):
     )
 
     file_util.set_value("environments", env, file_util.config_file)
+
 
 def set_current_environement(env):
     file_util.set_value("current_environment", env, file_util.config_file)
