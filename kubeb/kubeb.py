@@ -1,11 +1,13 @@
 import sys
+import os
 
 import time
 import click
 import click_spinner
 spinner = click_spinner.Spinner()
 
-from kubeb import file_util, config, command
+from kubeb import file_util, config
+from kubeb.command import Command
 
 
 class Kubeb:
@@ -72,20 +74,19 @@ class Kubeb:
 
         self.log('Building docker image ...')
         spinner.start()
-        status, output, err = command.run(command.docker_build_command(image, tag))
+        status = Command().run_docker_build(image, tag, os.getcwd())
         if status != 0:
-            self.log('Docker image build failed', err)
+            self.log('Docker image build failed')
             return
         spinner.stop()
 
         spinner.start()
-        status, output, err = command.run(command.docker_push_command(image, tag))
+        status = Command().run_docker_push(image, tag)
         if status != 0:
-            self.log('Docker image push failed', err)
+            self.log('Docker image push failed')
             return
         spinner.stop()
 
-        self.log(output)
         self.log('Docker image build succeed.')
 
         config.add_version(tag, msg)
@@ -110,16 +111,15 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status, output, err = command.run(command.helm_install_command(config.get_name(), config.get_template()))
+        status = Command().run_helm_install(config.get_name(), config.get_template())
         if status != 0:
-            self.log('Install application failed', err)
+            self.log('Install application failed')
             file_util.clean_up_after_install(config.get_template())
             exit(1)
 
         file_util.clean_up_after_install(config.get_template())
         spinner.stop()
 
-        self.log(output)
         self.log('Install application succeed.')
 
     def delete(self):
@@ -129,12 +129,11 @@ class Kubeb:
             self.log('Kubeb config file not found')
             return
 
-        status, output, err = command.run(command.helm_uninstall_command(config.get_name()))
+        status = Command().run_helm_uninstall(config.get_name())
         if status != 0:
-            self.log('Uninstall application failed', err)
+            self.log('Delete application failed')
             return
 
-        self.log(output)
         self.log('Uninstall application succeed.')
 
     def version(self):
