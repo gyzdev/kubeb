@@ -5,6 +5,10 @@ def load_config():
     return file_util.get_yaml_dict(file_util.config_file)
 
 
+def get_name():
+    return file_util.get_value('name', file_util.config_file)
+
+
 def get_image():
     return file_util.get_value("image", file_util.config_file)
 
