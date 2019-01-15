@@ -7,6 +7,7 @@ import click_spinner
 spinner = click_spinner.Spinner()
 
 from kubeb import file_util, config
+from .generators import (PodderPipelineGenerator, PodderTaskBeanGenerator, LaravelGenerator)
 from kubeb.command import Command
 
 
@@ -32,10 +33,21 @@ class Kubeb:
             return
 
         ext_template = file_util.is_ext_template(template)
-        file_util.clean_up()
-        file_util.generate_config_file(name, user, template, ext_template, image, env)
-        file_util.generate_environment_file(env, template)
-        file_util.generate_docker_file(template)
+
+        generator = self._get_generator(template)
+        if generator is None:
+            self.log('Kubeb template not found. Please check template name')
+            return
+
+        generator(data=dict(name=name,
+                            user=user,
+                            template=template,
+                            ext_template=ext_template,
+                            image=image,
+                            env=env,
+                            force=force
+                            )
+                  ).execute()
 
         self.log('Kubeb config file generated in %s', click.format_filename(file_util.config_file))
 
@@ -114,10 +126,8 @@ class Kubeb:
         if status != 0:
             self.log('Install application failed')
             file_util.clean_up_after_install(config.get_template())
-            exit(1)
-
-        file_util.clean_up_after_install(config.get_template())
         spinner.stop()
+        file_util.clean_up_after_install(config.get_template())
 
         self.log('Install application succeed.')
 
@@ -187,3 +197,12 @@ class Kubeb:
         file_util.clean_up()
 
         self.log('Destroyed config directory %s' % file_util.kubeb_directory)
+
+    def _get_generator(self, template):
+        generators = {
+            'laravel': LaravelGenerator,
+            'podder-pipeline': PodderPipelineGenerator,
+            'podder-task-bean': PodderTaskBeanGenerator,
+        }
+
+        return generators.get(template, None)

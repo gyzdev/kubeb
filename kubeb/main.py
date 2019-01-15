@@ -19,7 +19,7 @@ def cli():
               prompt='Maintainer name',
               help='Maintainer name.')
 @click.option('--template', '-t',
-              default='laravel|podder-task-bean',
+              default='laravel|podder-pipeline|podder-task-bean',
               prompt='Release template',
               help='Release template name.')
 @click.option('--image',

@@ -1,2 +1,0 @@
-# For framework
-POC_DATABASE_URL=mysql://root:password@dbserver/example_poc

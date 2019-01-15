@@ -75,15 +75,21 @@ def generate_docker_file(template):
     work_dir = os.getcwd()
     template_dir = template_directory + template
 
-    docker_file_src = os.path.join(template_dir, 'Dockerfile')
-    if os.path.isfile(docker_file_src):
-        docker_file_dst = os.path.join(work_dir, 'Dockerfile')
-        shutil.copy(docker_file_src, docker_file_dst)
+    docker_file_dst = os.path.join(work_dir, 'Dockerfile')
+    if os.path.isfile(docker_file_dst):
+        print("Dockerfile found: %s. Skipped." % docker_file_dst)
+    else:
+        docker_file_src = os.path.join(template_dir, 'Dockerfile')
+        if os.path.isfile(docker_file_src):
+            shutil.copy(docker_file_src, docker_file_dst)
 
-    ignore_src = os.path.join(template_dir, '.dockerignore')
-    if os.path.isfile(ignore_src):
-        ignore_dst = os.path.join(work_dir, '.dockerignore')
-        shutil.copy(ignore_src, ignore_dst)
+    docker_ignore_dst = os.path.join(work_dir, '.dockerignore')
+    if os.path.isfile(docker_ignore_dst):
+        print(".dockerignore found: %s. Skipped." % docker_ignore_dst)
+    else:
+        ignore_src = os.path.join(template_dir, '.dockerignore')
+        if os.path.isfile(ignore_src):
+            shutil.copy(ignore_src, docker_ignore_dst)
 
     if os.path.isdir(os.path.join(template_dir, template)):
         shutil.copytree(os.path.join(template_dir, template), get_helm_chart_dir(template))
@@ -109,7 +115,6 @@ def generate_helm_file(template, ext_template, image, tag, env):
     # for key, value in parsed_dict.items():
     #     if value and value != '' and value != 'null':
     #         env_vars[key] = value
-
     values = dict(
         image=image,
         tag=tag

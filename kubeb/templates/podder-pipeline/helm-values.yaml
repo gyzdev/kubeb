@@ -5,43 +5,30 @@
 replicaCount: 1
 
 app:
-  repository: pipeline
-  tag: latest
-  pullPolicy: Always
-  envFilePath: "pipeline.env"
+  repository: {{ image }}
+  tag: {{ tag }}
+  pullPolicy: IfNotPresent
+  envVars:
+    # task container network setting
+    POC_BASE_URL: poc_base:50051
+    SENSOR_TASK_URL: sensor_task:50051
+    WRITER_TASK_URL: writer_task:50051
+    # airflow
+    USER_DATABASE_URL: mysql://root:password@dbserver/exampledb
+    FRAMEWORK_DATABASE_URL: mysql://root:password@dbserver/frameworkdb
+    POC_DATABASE_URL: mysql://root:password@dbserver/example_poc
+    DATABASE_HOST: dbserver
+    NEWS_THROTTLING_MAX: 10
+    POC_THROTTLING_MAX: 2
+    INPUT_BUCKET_NAME: input_bucket_name
+    OUTPUT_BUCKET_NAME: output_bucket_name
+    AWS_ACCESS_KEY_ID: YOUR_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: YOUR_SECRET_KEY
+    AWS_REGION: ap-northeast-1
 
 service:
   type: ClusterIP
   port: 8080
-
-tasks:
-  - name: sensor_task
-    repository: chart-example
-    tag: latest
-    pullPolicy: Always
-    envFilePath: "sensor_task.env"
-    replicaCount: 1
-    service:
-      type: ClusterIP
-      port: 50051
-  - name: writer_task
-    repository: chart-example
-    tag: latest
-    pullPolicy: Always
-    envFilePath: "writer_task.env"
-    replicaCount: 1
-    service:
-      type: ClusterIP
-      port: 50051
-  - name: poc_base
-    repository: chart-example
-    tag: latest
-    pullPolicy: Always
-    envFilePath: "poc_base.env"
-    replicaCount: 1
-    service:
-      type: ClusterIP
-      port: 50051
 
 ingress:
   enabled: false
