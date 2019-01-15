@@ -34,7 +34,6 @@ class Kubeb:
         ext_template = file_util.is_ext_template(template)
         file_util.clean_up()
         file_util.generate_config_file(name, user, template, ext_template, image, env)
-        file_util.generate_script_file(name, template)
         file_util.generate_environment_file(env, template)
         file_util.generate_docker_file(template)
 

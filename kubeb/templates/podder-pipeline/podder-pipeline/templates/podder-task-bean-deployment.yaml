@@ -1,0 +1,96 @@
+{{- range $task := .Values.tasks }}
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "podder-pipeline.fullname" . }}-{{ $task.name }}-bean
+  labels:
+    app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+    chart: {{ template "podder-pipeline.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-{{ $task.name }}-env
+          secret:
+            secretName: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-{{ .Release.Time.Seconds }}-{{ $task.name }}-env
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-{{ $task.name }}-env
+              mountPath: /usr/local/poc_base/envs/.env
+              subPath: .env
+          ports:
+            - name: grpc
+              containerPort: {{ $task.service.port }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "podder-pipeline.fullname" . }}-{{ $task.name }}-service
+  labels:
+    app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+    chart: {{ template "podder-pipeline.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ $task.service.type }}
+  ports:
+    - port: {{ $task.service.port }}
+      protocol: TCP
+      name: grpc
+  selector:
+    app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+    release: {{ .Release.Name }}
+    
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-{{ .Release.Time.Seconds }}-{{ $task.name }}-env
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ template "podder-pipeline.name" . }}-{{ $task.name }}
+    chart: {{ template "podder-pipeline.chart" . }}
+    heritage: {{ .Release.Service }}
+    release: {{ .Release.Name }}
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-10"
+type: Opaque
+data:
+  .env: |-
+{{ .Files.Get $task.envFilePath | b64enc | indent 4 }}
+
+{{- end -}}
+
+
