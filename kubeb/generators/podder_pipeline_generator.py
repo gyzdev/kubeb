@@ -13,3 +13,4 @@ class PodderPipelineGenerator(BaseGenerator):
                                        self.data["image"],
                                        self.data["env"])
         file_util.generate_docker_file(self.data["template"])
+        file_util.generate_environment_file(self.data["env"], self.data["template"])

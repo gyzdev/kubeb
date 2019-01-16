@@ -1,5 +1,6 @@
 import os
 import subprocess
+from kubeb import file_util
 
 
 def run(command):
@@ -28,8 +29,11 @@ class Command(object):
         command = "docker push {}:{}".format(image, tag)
         return run(command)
 
-    def run_helm_install(self, name, template):
-        command = "helm upgrade --install --force {} -f .kubeb/helm-values.yml .kubeb/{} --wait".format(name, template)
+    def run_helm_install(self, name, template, debug):
+        helm_chart_path = file_util.get_helm_chart_path(template)
+        command = "helm upgrade --install --force {} -f .kubeb/helm-values.yml {} --wait".format(name, helm_chart_path)
+        if debug:
+            command += ' --dry-run --debug'
         return run(command)
 
     def run_helm_uninstall(self, name):

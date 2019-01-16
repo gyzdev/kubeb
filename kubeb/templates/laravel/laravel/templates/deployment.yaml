@@ -20,9 +20,6 @@ spec:
         release: {{ .Release.Name }}
     spec:
       volumes:
-        - name: {{ .Release.Name }}-{{ template "laravel.name" . }}-env
-          secret:
-            secretName: {{ .Release.Name }}-{{ template "laravel.name" . }}-{{ .Release.Time.Seconds }}-env
         - name: apache-conf
           configMap:
             name: {{ template "laravel.fullname" . }}-{{ .Release.Time.Seconds }}-apache
@@ -33,10 +30,9 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
+          env:
+  {{ toYaml .Values.app.envVars | indent 12 }}
           volumeMounts:
-            - name: {{ .Release.Name }}-{{ template "laravel.name" . }}-env
-              mountPath: /var/www/html/.env
-              subPath: .env
             - name: apache-conf
               mountPath: /etc/apache2/sites-enabled/vhost.conf
               subPath: vhost.conf

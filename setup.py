@@ -1,11 +1,33 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+
 import setuptools
+
+# circleci.py version
+VERSION = "0.0.8"
 
 with open("Readme.md", "r") as fh:
     long_description = fh.read()
 
+class VerifyVersionCommand(setuptools.command.install):
+    """Custom command to verify that the git tag matches our version"""
+    description = 'verify that the git tag matches our version'
+
+    def run(self):
+        tag = os.getenv('CIRCLE_TAG')
+
+        if tag != VERSION:
+            info = "Git tag: {0} does not match the version of this app: {1}".format(
+                tag, VERSION
+            )
+            sys.exit(info)
+
 setuptools.setup(
     name='kubeb',
-    version='0.0.7',
+    version=VERSION,
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
     packages=setuptools.find_packages(),
@@ -27,5 +49,8 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': ['kubeb=kubeb.main:cli'],
+    },
+    cmdclass={
+        'verify': VerifyVersionCommand,
     }
 )

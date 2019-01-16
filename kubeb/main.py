@@ -56,9 +56,12 @@ def build(message):
 @cli.command()
 @click.option('--version', '-v',
               help='Install version.')
-def deploy(version):
+@click.option('--debug',
+              is_flag=True,
+              default=False)
+def deploy(version, debug):
 
-    Kubeb().deploy(version)
+    Kubeb().deploy(version, debug)
 
 
 
@@ -82,6 +85,16 @@ def version():
 def env(env):
 
     Kubeb().env(env)
+
+
+@cli.command()
+@click.argument('vars',
+                nargs=-1)
+def setenv(vars):
+    env_vars = dict()
+    for item in vars:
+        env_vars.update([item.split('=')])
+    Kubeb().setenv(env_vars)
 
 
 @cli.command()

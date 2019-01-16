@@ -19,18 +19,17 @@ spec:
         app: {{ template "podder-task-bean.name" . }}
         release: {{ .Release.Name }}
     spec:
-      volumes:
-        - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
-          secret:
-            secretName: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-{{ .Release.Time.Seconds }}-env
+#      volumes:
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
-          volumeMounts:
-            - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
-              mountPath: /usr/local/poc_base/.env
-              subPath: .env
+          env:
+{{ .Values.app.envVars | toYaml | indent 12 }}
+#          volumeMounts:
+#            - name: {{ .Release.Name }}-{{ template "podder-task-bean.name" . }}-env
+#              mountPath: /usr/local/poc_base/.env
+#              subPath: .env
           ports:
             - name: grpc
               containerPort: {{ .Values.service.port }}

@@ -6,12 +6,17 @@ replicaCount: 1
 
 app:
   # please update your docker image
-  repository: chart-example
-  tag: latest
+  repository: {{ image }}
+  tag: {{ tag }}
   pullPolicy: Always
-  # please .env for environment variables
-  envFilePath: "app.env"
-  
+{% if env_vars and env_vars.items() | length > 0 %}
+  envVars:
+{% for key, value in env_vars.items() %}
+    - name: "{{ key }}"
+      value: "{{ value }}"
+{% endfor %}
+{% endif %}
+
 
 service:
   type: ClusterIP

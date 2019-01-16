@@ -68,18 +68,6 @@ def get_env(name):
     return environment
 
 
-def add_environement(env):
-    environments = file_util.get_value('environments', file_util.config_file)
-    if not environments:
-        environments = dict()
-
-    environments[env] = dict(
-        name=env
-    )
-
-    file_util.set_value("environments", env, file_util.config_file)
-
-
 def set_current_environement(env):
     file_util.set_value("current_environment", env, file_util.config_file)
 
@@ -90,3 +78,30 @@ def get_current_environment():
 
 def get_ext_template():
     return file_util.get_value('ext_template', file_util.config_file)
+
+
+def set_environment_variable(env, env_vars):
+    environments = file_util.get_value("environments", file_util.config_file)
+
+    variables = dict()
+    try:
+        variables = environments[env]['variables']
+    except KeyError:
+        pass
+
+    variables = { **variables, **env_vars }
+
+    print(variables)
+    environments[env]['variables'] = variables
+    file_util.set_value("environments", environments, file_util.config_file)
+
+
+def get_environment_variables(env):
+    environments = file_util.get_value("environments", file_util.config_file)
+
+    variables = dict()
+    try:
+        variables = environments[env]['variables']
+    except KeyError:
+        pass
+    return variables
