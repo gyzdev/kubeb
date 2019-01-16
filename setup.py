@@ -4,15 +4,17 @@
 import os
 import sys
 
-import setuptools
+from setuptools import setup, find_packages
+from setuptools.command.install import install
 
 # circleci.py version
-VERSION = "0.0.8"
+VERSION = "0.0.9"
 
 with open("Readme.md", "r") as fh:
     long_description = fh.read()
 
-class VerifyVersionCommand(setuptools.command.install):
+
+class VerifyVersionCommand(install):
     """Custom command to verify that the git tag matches our version"""
     description = 'verify that the git tag matches our version'
 
@@ -25,12 +27,12 @@ class VerifyVersionCommand(setuptools.command.install):
             )
             sys.exit(info)
 
-setuptools.setup(
+setup(
     name='kubeb',
     version=VERSION,
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
-    packages=setuptools.find_packages(),
+    packages=find_packages(),
     include_package_data=True,
     long_description=long_description,
     long_description_content_type="text/markdown",
