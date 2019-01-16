@@ -2,8 +2,11 @@ import os
 import shutil
 import codecs
 import yaml
+from dotenv import dotenv_values
 
 from jinja2 import Environment, FileSystemLoader
+
+from kubeb import config
 
 kubeb_directory = '.kubeb' + os.path.sep
 config_file = kubeb_directory + "config.yml"
@@ -38,14 +41,14 @@ def remove_config_dir():
         shutil.rmtree(directory)
 
 
-def get_template_directory(template, external):
+def get_template_directory(template, external=False):
     if external:
         return ext_template_directory + template
     else:
         return template_directory + template
 
-def get_helm_chart_dir(template):
-    return kubeb_directory + template
+def get_helm_chart_path(template):
+    return template_directory + template + os.path.sep + template
 
 def generate_config_file(name, user, template, ext_template, image, env):
     init_config_dir()
@@ -91,10 +94,6 @@ def generate_docker_file(template):
         if os.path.isfile(ignore_src):
             shutil.copy(ignore_src, docker_ignore_dst)
 
-    if os.path.isdir(os.path.join(template_dir, template)):
-        shutil.copytree(os.path.join(template_dir, template), get_helm_chart_dir(template))
-
-
 def generate_helm_file(template, ext_template, image, tag, env):
     if not ext_template:
         template_dir = template_directory + template
@@ -106,18 +105,23 @@ def generate_helm_file(template, ext_template, image, tag, env):
         print("can't read %s - it doesn't exist." % dotenv_path)
         return None
 
-    env_file_dst = os.path.join(get_helm_chart_dir(template), 'app.env')
-    shutil.copy(dotenv_path, env_file_dst)
+    parsed_dict = dotenv_values(dotenv_path)
 
-    # parsed_dict = dotenv_values(dotenv_path)
-    #
-    # env_vars = dict()
-    # for key, value in parsed_dict.items():
-    #     if value and value != '' and value != 'null':
-    #         env_vars[key] = value
+    env_vars = dict()
+    for key, value in parsed_dict.items():
+        if value and value != '' and value != 'null':
+            env_vars[key] = value
+
+    configured_vars = config.get_environment_variables(env)
+    if configured_vars:
+        for key, value in configured_vars.items():
+            if value and value != '' and value != 'null':
+                env_vars[key] = value
+
     values = dict(
         image=image,
-        tag=tag
+        tag=tag,
+        env_vars=env_vars,
     )
 
     jinja2_env = Environment(loader=FileSystemLoader(template_dir), trim_blocks=True)
@@ -197,12 +201,3 @@ def add_ext_template(name, path):
         shutil.rmtree(template_dir)
 
     shutil.copytree(path, template_dir)
-
-
-def clean_up_after_install(template):
-    try:
-        env_file = os.path.join(get_helm_chart_dir(template), 'app.env')
-        if os.path.isfile(env_file):
-            shutil.rmtree(env_file)
-    except:
-        pass

@@ -91,18 +91,11 @@ class Kubeb:
             return
         spinner.stop()
 
-        spinner.start()
-        status = Command().run_docker_push(image, tag)
-        if status != 0:
-            self.log('Docker image push failed')
-            return
-        spinner.stop()
-
         self.log('Docker image build succeed.')
 
         config.add_version(tag, msg)
 
-    def deploy(self, version):
+    def deploy(self, version, debug):
         """ Install current application to Kubernetes
             Generate Helm chart value file with docker image version
             If version is not specified, will get the latest version
@@ -116,20 +109,27 @@ class Kubeb:
             self.log('No deployable version found')
             return
 
+        if not debug:
+            spinner.start()
+            image = config.get_image()
+            status = Command().run_docker_push(image, deploy_version["tag"])
+            if status != 0:
+                self.log('Docker image push failed')
+                return
+            spinner.stop()
+
         self.log('Deploying version: %s', deploy_version["tag"])
         file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(),
                                      deploy_version["tag"], config.get_current_environment())
 
         self.log('Installing application ...')
         spinner.start()
-        status = Command().run_helm_install(config.get_name(), config.get_template())
+        status = Command().run_helm_install(config.get_name(), config.get_template(), debug)
+        spinner.stop()
         if status != 0:
             self.log('Install application failed')
-            file_util.clean_up_after_install(config.get_template())
-        spinner.stop()
-        file_util.clean_up_after_install(config.get_template())
-
-        self.log('Install application succeed.')
+        else:
+            self.log('Install application succeed.')
 
     def delete(self):
         """Uninstall current application from Kubernetes
@@ -176,6 +176,17 @@ class Kubeb:
 
         config.set_current_environement(env)
         self.log('Now use %s', env)
+
+    def setenv(self, env_vars):
+        """Use environment
+           Example: kubeb env develop to use environment develop
+        """
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
+            return
+
+        env = config.get_current_environment()
+        config.set_environment_variable(env, env_vars)
 
     def template(self,name, path, force):
         """Add user template
