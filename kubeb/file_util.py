@@ -8,8 +8,6 @@ from jinja2 import Environment, FileSystemLoader
 kubeb_directory = '.kubeb' + os.path.sep
 config_file = kubeb_directory + "config.yml"
 helm_value_file = kubeb_directory + "helm-values.yml"
-install_script_file = kubeb_directory + "install.sh"
-uninstall_script_file = kubeb_directory + "uninstall.sh"
 
 docker_file = os.path.join(os.getcwd(), "Dockerfile")
 docker_directory = os.path.join(os.getcwd(), "docker")
@@ -19,7 +17,6 @@ ext_template_directory = os.path.abspath(os.path.join(os.path.dirname(__file__),
 helm_template_directory = template_directory + "helm"
 
 _marker = object()
-_shebang = "#!/usr/bin/env bash"
 
 def config_file_exist():
     return os.path.isfile(config_file)
@@ -78,15 +75,21 @@ def generate_docker_file(template):
     work_dir = os.getcwd()
     template_dir = template_directory + template
 
-    docker_file_src = os.path.join(template_dir, 'Dockerfile')
-    if os.path.isfile(docker_file_src):
-        docker_file_dst = os.path.join(work_dir, 'Dockerfile')
-        shutil.copy(docker_file_src, docker_file_dst)
+    docker_file_dst = os.path.join(work_dir, 'Dockerfile')
+    if os.path.isfile(docker_file_dst):
+        print("Dockerfile found: %s. Skipped." % docker_file_dst)
+    else:
+        docker_file_src = os.path.join(template_dir, 'Dockerfile')
+        if os.path.isfile(docker_file_src):
+            shutil.copy(docker_file_src, docker_file_dst)
 
-    ignore_src = os.path.join(template_dir, '.dockerignore')
-    if os.path.isfile(ignore_src):
-        ignore_dst = os.path.join(work_dir, '.dockerignore')
-        shutil.copy(ignore_src, ignore_dst)
+    docker_ignore_dst = os.path.join(work_dir, '.dockerignore')
+    if os.path.isfile(docker_ignore_dst):
+        print(".dockerignore found: %s. Skipped." % docker_ignore_dst)
+    else:
+        ignore_src = os.path.join(template_dir, '.dockerignore')
+        if os.path.isfile(ignore_src):
+            shutil.copy(ignore_src, docker_ignore_dst)
 
     if os.path.isdir(os.path.join(template_dir, template)):
         shutil.copytree(os.path.join(template_dir, template), get_helm_chart_dir(template))
@@ -112,7 +115,6 @@ def generate_helm_file(template, ext_template, image, tag, env):
     # for key, value in parsed_dict.items():
     #     if value and value != '' and value != 'null':
     #         env_vars[key] = value
-
     values = dict(
         image=image,
         tag=tag
@@ -128,29 +130,6 @@ def generate_helm_file(template, ext_template, image, tag, env):
 
 def clean_up():
     remove_config_dir()
-
-def generate_script_file(name, template):
-    chart_info_file = os.path.join(template_directory + template, "info.yaml")
-    chart_name = get_value('chart_name', chart_info_file)
-    official = get_value('official', chart_info_file)
-
-    # install script
-    with open(install_script_file, "w") as file:
-        install_commands = [_shebang]
-        if not official:
-            install_commands.append(
-                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + get_helm_chart_dir(template) + " --wait")
-        else:
-            install_commands.append(
-                "helm upgrade --install --force " + name + " -f " + helm_value_file + " " + chart_name + " --wait")
-
-        file.write("\n".join(install_commands))
-
-    # uninstall script
-    with open(uninstall_script_file, "w") as file:
-        unintall_commands = [_shebang]
-        unintall_commands.append("helm delete --purge " + name)
-        file.write("\n".join(unintall_commands))
 
 
 def set_value(key_name, value, file):

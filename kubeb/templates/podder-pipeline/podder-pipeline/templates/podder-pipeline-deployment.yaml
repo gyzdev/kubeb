@@ -1,0 +1,55 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: {{ template "podder-pipeline.fullname" . }}-airflow
+  labels:
+    app: {{ template "podder-pipeline.name" . }}
+    chart: {{ template "podder-pipeline.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "podder-pipeline.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "podder-pipeline.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      volumes:
+        - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volumne
+          emptyDir: {}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
+          imagePullPolicy: {{ .Values.app.pullPolicy }}
+          command: ["airflow"]
+          env:
+            {{- range $key, $val := .Values.app.envVars }}
+            - name: {{ $key }}
+              value: {{ $val }}
+            {{- end }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volumne
+              mountPath: /usr/local/airflow_root/modules/app/shared
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

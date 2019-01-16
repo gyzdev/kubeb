@@ -1,0 +1,62 @@
+# Default values for podder-task-bean.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+app:
+  repository: pipeline
+  tag: latest
+  pullPolicy: Always
+  envVars:
+    # task container network setting
+    POC_BASE_URL: poc_base:50051
+    SENSOR_TASK_URL: sensor_task:50051
+    WRITER_TASK_URL: writer_task:50051
+    # airflow
+    USER_DATABASE_URL: mysql://root:password@dbserver/exampledb
+    FRAMEWORK_DATABASE_URL: mysql://root:password@dbserver/frameworkdb
+    POC_DATABASE_URL: mysql://root:password@dbserver/example_poc
+    DATABASE_HOST: dbserver
+    NEWS_THROTTLING_MAX: 10
+    POC_THROTTLING_MAX: 2
+    INPUT_BUCKET_NAME: input_bucket_name
+    OUTPUT_BUCKET_NAME: output_bucket_name
+    AWS_ACCESS_KEY_ID: YOUR_ACCESS_KEY
+    AWS_SECRET_ACCESS_KEY: YOUR_SECRET_KEY
+    AWS_REGION: ap-northeast-1
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  annotations:
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  path: /
+  hosts:
+    - chart-example.com
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

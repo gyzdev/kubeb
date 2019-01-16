@@ -1,31 +1,37 @@
 import os
-
 import subprocess
-
-from . import file_util as file
-
-
-def docker_build_command(image, tag):
-    return "docker build -t " + image + ':' + tag + ' ' + os.getcwd()
-
-
-def docker_push_command(image, tag):
-    return "docker push " + image + ':' + tag
-
-
-def helm_install_command(name, template):
-    return "helm upgrade --install --force " + name + " -f .kubeb/helm-values.yml .kubeb/" + template + " --wait"
-
-
-def helm_uninstall_command(name):
-    return "helm delete --purge " + name
 
 
 def run(command):
-    p = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+    while True:
+        output = process.stdout.readline()
+        if output == '' and process.poll() is not None:
+            break
+        if output:
+            print(output.strip())
 
-    (output, err) = p.communicate()
+    p_status = process.wait()
+    return p_status
 
-    p_status = p.wait()
 
-    return p_status, output, err
+class Command(object):
+
+    def __init__(self):
+        pass
+
+    def run_docker_build(self, image, tag, path):
+        command = "docker build -t {}:{} {}".format(image, tag, path)
+        return run(command)
+
+    def run_docker_push(self, image, tag):
+        command = "docker push {}:{}".format(image, tag)
+        return run(command)
+
+    def run_helm_install(self, name, template):
+        command = "helm upgrade --install --force {} -f .kubeb/helm-values.yml .kubeb/{} --wait".format(name, template)
+        return run(command)
+
+    def run_helm_uninstall(self, name):
+        command = "helm delete --purge {}".format(name)
+        return run(command)

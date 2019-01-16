@@ -1,11 +1,14 @@
 import sys
+import os
 
 import time
 import click
 import click_spinner
 spinner = click_spinner.Spinner()
 
-from kubeb import file_util, config, command
+from kubeb import file_util, config
+from .generators import (PodderPipelineGenerator, PodderTaskBeanGenerator, LaravelGenerator)
+from kubeb.command import Command
 
 
 class Kubeb:
@@ -30,11 +33,21 @@ class Kubeb:
             return
 
         ext_template = file_util.is_ext_template(template)
-        file_util.clean_up()
-        file_util.generate_config_file(name, user, template, ext_template, image, env)
-        file_util.generate_script_file(name, template)
-        file_util.generate_environment_file(env, template)
-        file_util.generate_docker_file(template)
+
+        generator = self._get_generator(template)
+        if generator is None:
+            self.log('Kubeb template not found. Please check template name')
+            return
+
+        generator(data=dict(name=name,
+                            user=user,
+                            template=template,
+                            ext_template=ext_template,
+                            image=image,
+                            env=env,
+                            force=force
+                            )
+                  ).execute()
 
         self.log('Kubeb config file generated in %s', click.format_filename(file_util.config_file))
 
@@ -72,20 +85,19 @@ class Kubeb:
 
         self.log('Building docker image ...')
         spinner.start()
-        status, output, err = command.run(command.docker_build_command(image, tag))
+        status = Command().run_docker_build(image, tag, os.getcwd())
         if status != 0:
-            self.log('Docker image build failed', err)
+            self.log('Docker image build failed')
             return
         spinner.stop()
 
         spinner.start()
-        status, output, err = command.run(command.docker_push_command(image, tag))
+        status = Command().run_docker_push(image, tag)
         if status != 0:
-            self.log('Docker image push failed', err)
+            self.log('Docker image push failed')
             return
         spinner.stop()
 
-        self.log(output)
         self.log('Docker image build succeed.')
 
         config.add_version(tag, msg)
@@ -110,16 +122,13 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status, output, err = command.run(command.helm_install_command(config.get_name(), config.get_template()))
+        status = Command().run_helm_install(config.get_name(), config.get_template())
         if status != 0:
-            self.log('Install application failed', err)
+            self.log('Install application failed')
             file_util.clean_up_after_install(config.get_template())
-            exit(1)
-
-        file_util.clean_up_after_install(config.get_template())
         spinner.stop()
+        file_util.clean_up_after_install(config.get_template())
 
-        self.log(output)
         self.log('Install application succeed.')
 
     def delete(self):
@@ -129,12 +138,11 @@ class Kubeb:
             self.log('Kubeb config file not found')
             return
 
-        status, output, err = command.run(command.helm_uninstall_command(config.get_name()))
+        status = Command().run_helm_uninstall(config.get_name())
         if status != 0:
-            self.log('Uninstall application failed', err)
+            self.log('Delete application failed')
             return
 
-        self.log(output)
         self.log('Uninstall application succeed.')
 
     def version(self):
@@ -189,3 +197,12 @@ class Kubeb:
         file_util.clean_up()
 
         self.log('Destroyed config directory %s' % file_util.kubeb_directory)
+
+    def _get_generator(self, template):
+        generators = {
+            'laravel': LaravelGenerator,
+            'podder-pipeline': PodderPipelineGenerator,
+            'podder-task-bean': PodderTaskBeanGenerator,
+        }
+
+        return generators.get(template, None)
