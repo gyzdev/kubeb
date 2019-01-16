@@ -28,10 +28,7 @@ spec:
           imagePullPolicy: {{ .Values.app.pullPolicy }}
           command: ["airflow"]
           env:
-            {{- range $key, $val := .Values.app.envVars }}
-            - name: {{ $key }}
-              value: {{ $val }}
-            {{- end }}
+{{ .Values.app.envVars | toYaml | indent 12 }}
           volumeMounts:
             - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volumne
               mountPath: /usr/local/airflow_root/modules/app/shared
