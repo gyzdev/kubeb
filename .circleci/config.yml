@@ -15,7 +15,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v1-dependency-cache-{{ checksum "setup.py" }}-{{ checksum "Makefile" }}
+          key: v1-dependency-cache-{{ checksum "setup.py" }}
       - run:
           name: install python dependencies
           command: |
@@ -23,7 +23,7 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
       - save_cache:
-          key: v1-dependency-cache-{{ checksum "setup.py" }}-{{ checksum "Makefile" }}
+          key: v1-dependency-cache-{{ checksum "setup.py" }}
           paths:
             - "venv"
       - run:
