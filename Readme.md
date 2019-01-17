@@ -96,6 +96,34 @@ Usage: kubeb env [ENV]
 
 ```
 
+## Set environment variables for your application
+
+```bash
+kubeb setenv --help
+Usage: kubeb setenv [OPTIONS] [VARS]...
+
+Options:
+  --help  Show this message and exit.
+
+$ kubeb setenv aa=1 bb=1 cc=1113
+{'aa': '1', 'bb': '1', 'cc': '1113'}
+```
+
+Result
+
+```.kubeb/config.yaml
+current_environment: local
+environments:
+  local:
+    name: local
+    variables:
+      aa: '1'
+      bb: '1'
+      cc: '1113'
+```
+
+These environment variables will be used when deploy application to Kubernetes
+
 ## Build your application (Dockerfile building)
 
 ```bash
