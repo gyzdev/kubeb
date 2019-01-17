@@ -62,7 +62,8 @@ sharedVolume:
     ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
     ##   GKE, AWS & OpenStack)
     ##
-    storageClass: "manual"
+#    storageClass: "-"
     accessMode: ReadWriteOnce
     size: 1Gi
+    annotations: {}
 #    existingClaim: "podder-pipeline-pvc"
