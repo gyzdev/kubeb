@@ -21,7 +21,9 @@ $ pip install -U kubeb
 
 ```bash
 # Init application
-$ kubeb init --name sample --template laravel --local
+$ kubeb init --name sample --template laravel
+# Configure environment variables
+$ vi .env.local
 # Build application
 $ kubeb build -m 'release version 1'
 # Deploy application
@@ -317,4 +319,3 @@ Options:
 
 ## Todo
 - [ ] Using Kubernetes namespace for each environment
-- [ ] Refactor code: use class in config, file_utils, core, command
