@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 from setuptools.command.install import install
 
 # version
-VERSION = "0.0.10"
+VERSION = "0.0.11"
 
 with open("Readme.md", "r") as fh:
     long_description = fh.read()

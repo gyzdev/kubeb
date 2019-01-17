@@ -6,7 +6,7 @@ from kubeb.kubeb import Kubeb
 
 
 @click.group()
-@click.version_option(version='0.0.10')
+@click.version_option(version='0.0.11')
 def cli():
     pass
 
