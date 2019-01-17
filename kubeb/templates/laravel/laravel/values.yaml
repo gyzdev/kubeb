@@ -5,13 +5,9 @@
 replicaCount: 1
 
 app:
-  # please update your docker image
-  repository: chart-example
-  tag: latest
-  pullPolicy: Always
-  # please .env for environment variables
-  envFilePath: "app.env"
-  
+  repository: test
+  tag: tag
+  pullPolicy: IfNotPresent
 
 service:
   type: ClusterIP

@@ -50,3 +50,19 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+sharedVolume:
+  ## Persist data to a persistent volume
+  persistence:
+    enabled: true
+    ## database data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    ##
+    storageClass: "manual"
+    accessMode: ReadWriteOnce
+    size: 1Gi
+#    existingClaim: "podder-pipeline-pvc"
