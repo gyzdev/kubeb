@@ -7,8 +7,8 @@ import sys
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
-# circleci.py version
-VERSION = "0.0.9"
+# version
+VERSION = "0.0.10"
 
 with open("Readme.md", "r") as fh:
     long_description = fh.read()
@@ -32,8 +32,10 @@ setup(
     version=VERSION,
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
-    packages=find_packages(),
-    include_package_data=True,
+    packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
+    package_data={
+        'kubeb': ['**/*.py', '**/**/*'],
+    },
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/podder-ai/kubeb",
