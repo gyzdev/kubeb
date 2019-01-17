@@ -5,16 +5,9 @@
 replicaCount: 1
 
 app:
-  repository: {{ image }}
-  tag: {{ tag }}
+  repository: test
+  tag: tag
   pullPolicy: IfNotPresent
-{% if env_vars and env_vars.items() | length > 0 %}
-  envVars:
-{% for key, value in env_vars.items() %}
-    - name: "{{ key }}"
-      value: "{{ value }}"
-{% endfor %}
-{% endif %}
 
 service:
   type: ClusterIP
@@ -50,3 +43,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+sharedVolume: {}

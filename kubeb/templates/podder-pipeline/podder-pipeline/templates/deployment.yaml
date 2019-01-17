@@ -20,8 +20,17 @@ spec:
         release: {{ .Release.Name }}
     spec:
       volumes:
-        - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volumne
+        - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volume
+        {{- if .Values.sharedVolume.hostPath }}
+          hostPath:
+            path: {{ .Values.sharedVolume.hostPath }}
+          {{- else }}{{- if .Values.sharedVolume.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ template "podder-pipeline.fullname" . }}-pvc
+          {{- else }}
           emptyDir: {}
+          {{- end }}
+        {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
@@ -30,7 +39,7 @@ spec:
           env:
 {{ .Values.app.envVars | toYaml | indent 12 }}
           volumeMounts:
-            - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volumne
+            - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volume
               mountPath: /usr/local/airflow_root/modules/app/shared
           ports:
             - name: http
