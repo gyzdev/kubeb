@@ -1,17 +1,11 @@
 import os
-import io
-import re
 
 import click
 
 from kubeb.kubeb import Kubeb
 
-with io.open("kubeb/__init__.py", "rt", encoding="utf8") as f:
-    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
-
 
 @click.group()
-@click.version_option(version=version)
 def cli():
     pass
 
