@@ -1,12 +1,17 @@
 import os
+import io
+import re
 
 import click
 
 from kubeb.kubeb import Kubeb
 
+with io.open("kubeb/__init__.py", "rt", encoding="utf8") as f:
+    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
+
 
 @click.group()
-@click.version_option(version='0.0.11')
+@click.version_option(version=version)
 def cli():
     pass
 
@@ -36,13 +41,11 @@ def cli():
               is_flag=True,
               help='Overwrite config file.')
 def init(name, user, template, image, env, force):
-
     Kubeb().initiate(name, user, template, image, env, force)
 
 
 @cli.command()
 def info():
-
     Kubeb().info()
 
 
@@ -54,7 +57,6 @@ def info():
               is_flag=True,
               default=False)
 def build(message, push):
-
     Kubeb().build(message, push)
 
 
@@ -62,7 +64,6 @@ def build(message, push):
 @click.option('--version', '-v',
               help='Push version.')
 def push(version):
-
     Kubeb().push(version)
 
 
@@ -73,20 +74,17 @@ def push(version):
               is_flag=True,
               default=False)
 def deploy(version, dry_run):
-
     Kubeb().deploy(version, dry_run)
 
 
 @cli.command()
 @click.confirmation_option()
 def delete():
-
     Kubeb().delete()
 
 
 @cli.command()
 def version():
-
     Kubeb().version()
 
 
@@ -95,7 +93,6 @@ def version():
                 default='local',
                 type=str)
 def env(env):
-
     Kubeb().env(env)
 
 
@@ -120,14 +117,10 @@ def setenv(variables):
               is_flag=True,
               help='Overwrite template file.')
 def template(name, path, force):
-
     Kubeb().template(name, path, force)
 
 
 @cli.command()
 @click.confirmation_option()
 def destroy():
-
     Kubeb().destroy()
-
-

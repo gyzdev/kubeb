@@ -2,17 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import os
+import io
+import re
 import sys
 
 from setuptools import setup, find_packages
 from setuptools.command.install import install
 
-# version
-VERSION = "0.0.11"
+with io.open("kubeb/__init__.py", "rt", encoding="utf8") as f:
+    version = re.search(r"__version__ = \'(.*?)\'", f.read()).group(1)
 
 with open("Readme.md", "r") as fh:
     long_description = fh.read()
-
 
 class VerifyVersionCommand(install):
     """Custom command to verify that the git tag matches our version"""
@@ -21,15 +22,15 @@ class VerifyVersionCommand(install):
     def run(self):
         tag = os.getenv('CIRCLE_TAG')
 
-        if tag != VERSION:
+        if tag != version:
             info = "Git tag: {0} does not match the version of this app: {1}".format(
-                tag, VERSION
+                tag, version
             )
             sys.exit(info)
 
 setup(
     name='kubeb',
-    version=VERSION,
+    version=version,
     author="podder-ai",
     description=" Kubeb (Cubeba) provide CLI to build and deploy a application to Kubernetes environment",
     packages=find_packages(exclude=['tests', '*.tests', '*.tests.*']),
