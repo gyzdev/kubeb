@@ -61,7 +61,7 @@ class Kubeb:
         config_data = config.load_config()
         print(config_data)
 
-    def build(self, message):
+    def build(self, message, push):
         """ Build current application
             Build Dockerfile image
             Add release note, tag to config file
@@ -83,19 +83,53 @@ class Kubeb:
         image = config.get_image()
         tag = 'v' + str(int(round(time.time() * 1000)))
 
-        self.log('Building docker image ...')
+        self.log('Building docker image {}:{}...'.format(image, tag))
+
         spinner.start()
         status = Command().run_docker_build(image, tag, os.getcwd())
+        spinner.stop()
         if status != 0:
             self.log('Docker image build failed')
             return
-        spinner.stop()
+        else:
+            self.log('Docker image build succeed.')
 
-        self.log('Docker image build succeed.')
+        if push:
+            spinner.start()
+            status = Command().run_docker_push(image, tag)
+            spinner.stop()
+            if status != 0:
+                self.log('Docker image push failed')
+                return
+            else:
+                self.log('Docker image push succeed.')
 
         config.add_version(tag, msg)
 
-    def deploy(self, version, debug):
+    def push(self, version=None):
+        """ Push docker image to registry
+        """
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found')
+            return
+
+        deploy_version = config.get_version(version)
+        if not deploy_version:
+            self.log('No deploy version found')
+            return
+
+        image = config.get_image()
+        self.log('docker push {}:{}'.format(image, deploy_version["tag"]))
+
+        spinner.start()
+        status = Command().run_docker_push(image, deploy_version["tag"])
+        spinner.stop()
+        if status != 0:
+            self.log('Docker image push failed')
+        else:
+            self.log('Docker image push succeed.')
+
+    def deploy(self, version, dry_run):
         """ Install current application to Kubernetes
             Generate Helm chart value file with docker image version
             If version is not specified, will get the latest version
@@ -109,7 +143,7 @@ class Kubeb:
             self.log('No deployable version found')
             return
 
-        if not debug:
+        if not dry_run:
             spinner.start()
             image = config.get_image()
             status = Command().run_docker_push(image, deploy_version["tag"])
@@ -124,7 +158,7 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status = Command().run_helm_install(config.get_name(), config.get_template(), debug)
+        status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run)
         spinner.stop()
         if status != 0:
             self.log('Install application failed')
