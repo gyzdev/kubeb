@@ -50,21 +50,31 @@ def info():
 @click.option('--message', '-m',
               multiple=True,
               help='Release note')
-def build(message):
+@click.option('--push',
+              is_flag=True,
+              default=False)
+def build(message, push):
 
-    Kubeb().build(message)
+    Kubeb().build(message, push)
+
+
+@cli.command()
+@click.option('--version', '-v',
+              help='Push version.')
+def push(version):
+
+    Kubeb().push(version)
 
 
 @cli.command()
 @click.option('--version', '-v',
               help='Install version.')
-@click.option('--debug',
+@click.option('--dry-run', 'dry_run',
               is_flag=True,
               default=False)
-def deploy(version, debug):
+def deploy(version, dry_run):
 
-    Kubeb().deploy(version, debug)
-
+    Kubeb().deploy(version, dry_run)
 
 
 @cli.command()
@@ -90,11 +100,11 @@ def env(env):
 
 
 @cli.command()
-@click.argument('vars',
+@click.argument('variables',
                 nargs=-1)
-def setenv(vars):
+def setenv(variables):
     env_vars = dict()
-    for item in vars:
+    for item in variables:
         env_vars.update([item.split('=')])
     Kubeb().setenv(env_vars)
 

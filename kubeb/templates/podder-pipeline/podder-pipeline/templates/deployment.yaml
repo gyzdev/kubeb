@@ -35,12 +35,12 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
-          command: ["airflow"]
+          args: ["airflow"]
           env:
 {{ .Values.app.envVars | toYaml | indent 12 }}
           volumeMounts:
             - name: {{ .Release.Name }}-{{ template "podder-pipeline.name" . }}-shared-volume
-              mountPath: /usr/local/airflow_root/modules/app/shared
+              mountPath: /usr/local/airflow_root/shared
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
