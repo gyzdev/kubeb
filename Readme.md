@@ -22,10 +22,18 @@ $ pip install -U kubeb
 ```bash
 # Init application
 $ kubeb init --name sample --template laravel
+
 # Configure environment variables
+# Please update your environment varibales in .evn.local
 $ vi .env.local
+
 # Build application
 $ kubeb build -m 'release version 1'
+
+# Push docker image if require
+# Please push your docker image to some registry if require.
+$ kubeb push
+
 # Deploy application
 $ kubeb deploy
 ```
@@ -42,7 +50,10 @@ $ kubeb build -m test
 # check version
 $ kubeb version
 
-# deploy
+# deploy dry-run for testing
+$ kubeb deploy --dry-run
+
+# Deploy
 $ kubeb deploy
 
 # delete
