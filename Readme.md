@@ -34,8 +34,37 @@ $ kubeb build -m 'release version 1'
 # Please push your docker image to some registry if require.
 $ kubeb push
 
+# deploy dry-run for testing
+$ kubeb deploy --dry-run
+
 # Deploy application
 $ kubeb deploy
+```
+
+### Podder pipeline deployment
+
+```bash
+# init
+$ kubeb init --name sample-task --template pipeline --force
+
+# docker image build & publish
+$ kubeb build -m test
+
+# Configure environment variables
+# Please update your environment varibales in .evn.local
+$ vi .env.local
+
+# check version
+$ kubeb version
+
+# deploy dry-run for testing
+$ kubeb deploy --dry-run
+
+# Deploy
+$ kubeb deploy
+
+# delete
+$ kubeb delete
 ```
 
 ### Podder task bean deployment
@@ -46,6 +75,10 @@ $ kubeb init --name sample-task --template podder-task-bean --force
 
 # docker image build & publish
 $ kubeb build -m test
+
+# Configure environment variables
+# Please update your environment varibales in .evn.local
+$ vi .env.local
 
 # check version
 $ kubeb version
@@ -149,6 +182,19 @@ Usage: kubeb build [OPTIONS]
 
 Options:
   -m, --message TEXT  Release note
+
+```
+
+
+## Push your application docker image to
+
+```bash
+kubeb push --help
+
+Usage: kubeb push [OPTIONS]
+
+  Push current application Build Dockerfile image
+
 
 ```
 
