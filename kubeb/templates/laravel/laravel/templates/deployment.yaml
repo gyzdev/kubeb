@@ -31,7 +31,8 @@ spec:
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
           env:
-  {{ toYaml .Values.app.envVars | indent 12 }}
+
+{{ .Values.app.envVars | toYaml | indent 12 }}
           volumeMounts:
             - name: apache-conf
               mountPath: /etc/apache2/sites-enabled/vhost.conf

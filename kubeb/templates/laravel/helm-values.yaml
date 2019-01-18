@@ -13,7 +13,7 @@ app:
 {% if env_vars and env_vars.items() | length > 0 %}
   envVars:
 {% for key, value in env_vars.items() %}
-    - key: "{{ key }}"
+    - name: "{{ key }}"
       value: "{{ value }}"
 {% endfor %}
 {% endif %}
