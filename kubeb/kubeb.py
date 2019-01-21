@@ -129,7 +129,7 @@ class Kubeb:
         else:
             self.log('Docker image push succeed.')
 
-    def deploy(self, version, dry_run):
+    def deploy(self, version, options, dry_run):
         """ Install current application to Kubernetes
             Generate Helm chart value file with docker image version
             If version is not specified, will get the latest version
@@ -143,22 +143,17 @@ class Kubeb:
             self.log('No deployable version found')
             return
 
-        if not dry_run:
-            spinner.start()
-            image = config.get_image()
-            status = Command().run_docker_push(image, deploy_version["tag"])
-            if status != 0:
-                self.log('Docker image push failed')
-                return
-            spinner.stop()
-
         self.log('Deploying version: %s', deploy_version["tag"])
         file_util.generate_helm_file(config.get_template(), config.get_ext_template(), config.get_image(),
                                      deploy_version["tag"], config.get_current_environment())
 
+        if options and not dry_run:
+            self.log('Saving deploy options ...')
+            file_util.save_deploy_options(options)
+
         self.log('Installing application ...')
         spinner.start()
-        status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run)
+        status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run, options)
         spinner.stop()
         if status != 0:
             self.log('Install application failed')

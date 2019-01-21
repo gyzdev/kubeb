@@ -64,11 +64,19 @@ def push(version):
 @cli.command()
 @click.option('--version', '-v',
               help='Install version.')
+@click.option('--set', 'options',
+              type=str)
 @click.option('--dry-run', 'dry_run',
               is_flag=True,
               default=False)
-def deploy(version, dry_run):
-    Kubeb().deploy(version, dry_run)
+def deploy(version, options, dry_run):
+    deploy_options = dict()
+
+    if options:
+        for item in options.split(','):
+            deploy_options.update([item.split('=')])
+
+    Kubeb().deploy(version, deploy_options, dry_run)
 
 
 @cli.command()

@@ -11,6 +11,7 @@ from kubeb import config
 kubeb_directory = '.kubeb' + os.path.sep
 config_file = kubeb_directory + "config.yml"
 helm_value_file = kubeb_directory + "helm-values.yml"
+deploy_option_file = os.path.join(os.getcwd(), "kubeb-values.yml")
 
 docker_file = os.path.join(os.getcwd(), "Dockerfile")
 docker_directory = os.path.join(os.getcwd(), "docker")
@@ -201,3 +202,9 @@ def add_ext_template(name, path):
         shutil.rmtree(template_dir)
 
     shutil.copytree(path, template_dir)
+
+
+def save_deploy_options(options):
+    with codecs.open(deploy_option_file, 'w', encoding='utf8') as f:
+        f.write(yaml.dump(options, default_flow_style=False,
+                          line_break=os.linesep))
