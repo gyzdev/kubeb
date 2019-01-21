@@ -15,7 +15,7 @@ def cli():
               default=lambda: os.path.basename(os.getcwd()),
               prompt='Release name',
               help='Release name.')
-@click.option('--user', '-n',
+@click.option('--user', '-u',
               default=lambda: os.environ.get('USER', ''),
               prompt='Maintainer name',
               help='Maintainer name.')
