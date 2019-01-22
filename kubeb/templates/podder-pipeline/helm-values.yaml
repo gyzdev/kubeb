@@ -66,4 +66,4 @@ sharedVolume:
     accessMode: ReadWriteOnce
     size: 1Gi
     annotations: {}
-#    existingClaim: "podder-pipeline-pvc"
+    existingClaim: "podder-pipeline-pvc"

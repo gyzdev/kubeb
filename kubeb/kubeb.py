@@ -1,6 +1,7 @@
 import sys
 import os
 
+import yaml
 import time
 import click
 import click_spinner
@@ -23,7 +24,6 @@ class Kubeb:
         """ Init kubeb configuration
              Generate config, script files
         """
-
         if file_util.config_file_exist() and force is False:
             self.log('Kubeb config found. Please update config file or use --force option')
             return
@@ -36,7 +36,7 @@ class Kubeb:
 
         generator = self._get_generator(template)
         if generator is None:
-            self.log('Kubeb template not found. Please check template name')
+            self.log('Kubeb generator not found. Please check template name')
             return
 
         generator(data=dict(name=name,
@@ -58,7 +58,7 @@ class Kubeb:
             self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
             return
 
-        config_data = config.load_config()
+        config_data = yaml.dump(config.load_config(), default_flow_style=False)
         print(config_data)
 
     def build(self, message, push):
@@ -129,7 +129,7 @@ class Kubeb:
         else:
             self.log('Docker image push succeed.')
 
-    def deploy(self, version, options, dry_run):
+    def deploy(self, version, options, dry_run, rollback=False):
         """ Install current application to Kubernetes
             Generate Helm chart value file with docker image version
             If version is not specified, will get the latest version
@@ -156,9 +156,21 @@ class Kubeb:
         status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run, options)
         spinner.stop()
         if status != 0:
-            self.log('Install application failed')
+            self.log('Install application failed.')
+
+            if not dry_run and not rollback:
+                self.log('Rollback application to previous version')
+                self.deploy(config.get_last_deploy_version(), options, False, True)
         else:
+
+            config.update_last_deploy_version(deploy_version["tag"])
             self.log('Install application succeed.')
+
+    def rollback(self, version, options):
+
+        rollback_version = config.get_previous_version(version)
+
+        self.deploy(rollback_version["tag"], options, False)
 
     def delete(self):
         """Uninstall current application from Kubernetes

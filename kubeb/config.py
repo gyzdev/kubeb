@@ -46,6 +46,26 @@ def get_version(version=None):
     return found_version
 
 
+def get_previous_version(version):
+
+    versions = get_versions()
+    if not versions or len(versions) == 0:
+        return None
+
+    previous_version = None
+    versions.sort(key=lambda r: r["tag"])
+    i = 0
+    ver = dict({"tag": ""})
+    while ver["tag"] == version:
+        ver = versions[i]
+        i += 1
+
+    if i < len(versions):
+        previous_version = versions[i + 1]
+
+    return previous_version
+
+
 def get_template():
     return file_util.get_value('template', file_util.config_file)
 
@@ -105,3 +125,11 @@ def get_environment_variables(env):
     except KeyError:
         pass
     return variables
+
+
+def update_last_deploy_version(version_tag):
+    file_util.set_value("last_deploy_version", version_tag, file_util.config_file)
+
+
+def get_last_deploy_version():
+    return file_util.get_value("last_deploy_version", file_util.config_file)

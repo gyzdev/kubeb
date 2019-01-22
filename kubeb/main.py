@@ -3,9 +3,11 @@ import os
 import click
 
 from kubeb.kubeb import Kubeb
+from kubeb import __version__
 
 
 @click.group()
+@click.version_option(__version__)
 def cli():
     pass
 
