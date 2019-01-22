@@ -1,13 +1,13 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "podder-task-bean.fullname" . -}}
+{{- $fullName := include "laravel.fullname" . -}}
 {{- $ingressPath := .Values.ingress.path -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   labels:
-    app: {{ template "podder-task-bean.name" . }}
-    chart: {{ template "podder-task-bean.chart" . }}
+    app: {{ template "laravel.name" . }}
+    chart: {{ template "laravel.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 {{- with .Values.ingress.annotations }}

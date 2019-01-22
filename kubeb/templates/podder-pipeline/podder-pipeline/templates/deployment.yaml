@@ -25,8 +25,13 @@ spec:
           hostPath:
             path: {{ .Values.sharedVolume.hostPath }}
           {{- else }}{{- if .Values.sharedVolume.persistence.enabled }}
+          {{- if .Values.sharedVolume.persistence.existingClaim }}
+          persistentVolumeClaim:
+            claimName: {{ .Values.sharedVolume.persistence.existingClaim }}
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ template "podder-pipeline.fullname" . }}-pvc
+          {{- end }}
           {{- else }}
           emptyDir: {}
           {{- end }}

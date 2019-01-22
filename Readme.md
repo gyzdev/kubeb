@@ -204,16 +204,19 @@ Using --version option to specify application version. If version is not specifi
 You can see version list by `kubeb version` command
 ```bash
 kubeb deploy --help
-
 Usage: kubeb deploy [OPTIONS]
-
-  Install current application to Kubernetes Generate Helm chart value file
-  with docker image version If version is not specified, will get the latest
-  version
 
 Options:
   -v, --version TEXT  Install version.
-  --help               this message and exit.
+  --set TEXT
+  --dry-run
+  --help              Show this message and exit.
+
+# Deploy with custom configuration.
+# Configuration will be saved to kubeb-values.yml of project directory.
+
+kubeb deploy --set aa=1,bb=1,cc=1113
+
 ```
 
 ## Uninstall your application from Kubernetes
