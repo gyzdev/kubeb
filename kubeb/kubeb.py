@@ -129,7 +129,7 @@ class Kubeb:
         else:
             self.log('Docker image push succeed.')
 
-    def deploy(self, version, options, dry_run, rollback=False):
+    def deploy(self, version, options, dry_run, rollback=True):
         """ Install current application to Kubernetes
             Generate Helm chart value file with docker image version
             If version is not specified, will get the latest version
@@ -158,19 +158,11 @@ class Kubeb:
         if status != 0:
             self.log('Install application failed.')
 
-            if not dry_run and not rollback:
+            if dry_run is False and rollback:
                 self.log('Rollback application to previous version')
-                self.deploy(config.get_last_deploy_version(), options, False, True)
+                self.rollback(0)
         else:
-
-            config.update_last_deploy_version(deploy_version["tag"])
             self.log('Install application succeed.')
-
-    def rollback(self, version, options):
-
-        rollback_version = config.get_previous_version(version)
-
-        self.deploy(rollback_version["tag"], options, False)
 
     def delete(self):
         """Uninstall current application from Kubernetes
@@ -200,6 +192,44 @@ class Kubeb:
 
         for version in versions:
             self.log('- %s: %s', version['tag'], version['message'])
+
+    def history(self):
+        """Show current application deploy history
+        """
+
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
+            return
+
+        self.log('Get application deploy history ...')
+        spinner.start()
+        status = Command().run_helm_history(config.get_name())
+        spinner.stop()
+        if status != 0:
+            self.log('Get application deploy history failed.')
+        else:
+            self.log('Get application deploy history succeed.')
+
+    def rollback(self, revision):
+        """Rollback application to revision
+            revision=0 is rollback to previous version
+        """
+
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
+            return
+
+        self.log('Rollback application to revision {} ...'.format(revision))
+        spinner.start()
+        status = Command().run_helm_rollback(config.get_name(), revision)
+        spinner.stop()
+        if status != 0:
+            self.log('Rollback application to revision failed.')
+        else:
+            spinner.start()
+            Command().run_helm_history(config.get_name())
+            spinner.stop()
+            self.log('Rollback application to revision succeed.')
 
     def env(self, env):
         """Use environment

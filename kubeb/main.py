@@ -71,14 +71,18 @@ def push(version):
 @click.option('--dry-run', 'dry_run',
               is_flag=True,
               default=False)
-def deploy(version, options, dry_run):
+@click.option('--rollback',
+              is_flag=True,
+              default=False)
+@click.confirmation_option()
+def deploy(version, options, dry_run, rollback):
     deploy_options = dict()
 
     if options:
         for item in options.split(','):
             deploy_options.update([item.split('=')])
 
-    Kubeb().deploy(version, deploy_options, dry_run)
+    Kubeb().deploy(version, deploy_options, dry_run, rollback)
 
 
 @cli.command()
@@ -90,6 +94,20 @@ def delete():
 @cli.command()
 def version():
     Kubeb().version()
+
+
+@cli.command()
+def history():
+    Kubeb().history()
+
+
+@cli.command()
+@click.argument('revision',
+                default=0,
+                type=int)
+@click.confirmation_option()
+def rollback(revision):
+    Kubeb().rollback(revision)
 
 
 @cli.command()

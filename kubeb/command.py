@@ -46,3 +46,11 @@ class Command(object):
     def run_helm_uninstall(self, name):
         command = "helm delete --purge {}".format(name)
         return run(command)
+
+    def run_helm_history(self, image):
+        command = "helm history {}".format(image)
+        return run(command)
+
+    def run_helm_rollback(self, image, revision):
+        command = "helm rollback {} {}".format(image, revision)
+        return run(command)
