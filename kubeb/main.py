@@ -84,7 +84,7 @@ def push(version):
               default=False)
 @click.option('--rollback',
               is_flag=True,
-              default=False)
+              default=True)
 @click.confirmation_option()
 def deploy(version, options, dry_run, rollback):
     """ Install current application to Kubernetes
