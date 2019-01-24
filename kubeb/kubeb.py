@@ -7,9 +7,8 @@ import click
 import click_spinner
 spinner = click_spinner.Spinner()
 
-from kubeb import file_util, config
+from kubeb import file_util, config, util
 from .generators import (PodderPipelineGenerator, PodderTaskBeanGenerator, LaravelGenerator)
-from kubeb.command import Command
 
 
 class Kubeb:
@@ -21,9 +20,6 @@ class Kubeb:
 
     def initiate(self, name, user, template, image, env, force):
 
-        """ Init kubeb configuration
-             Generate config, script files
-        """
         if file_util.config_file_exist() and force is False:
             self.log('Kubeb config found. Please update config file or use --force option')
             return
@@ -52,8 +48,7 @@ class Kubeb:
         self.log('Kubeb config file generated in %s', click.format_filename(file_util.config_file))
 
     def info(self):
-        """ Show current configuration
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
             return
@@ -62,10 +57,7 @@ class Kubeb:
         print(config_data)
 
     def build(self, message, push):
-        """ Build current application
-            Build Dockerfile image
-            Add release note, tag to config file
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
             exit(1)
@@ -86,7 +78,7 @@ class Kubeb:
         self.log('Building docker image {}:{}...'.format(image, tag))
 
         spinner.start()
-        status = Command().run_docker_build(image, tag, os.getcwd())
+        status = util.run_docker_build(image, tag, os.getcwd())
         spinner.stop()
         if status != 0:
             self.log('Docker image build failed')
@@ -96,7 +88,7 @@ class Kubeb:
 
         if push:
             spinner.start()
-            status = Command().run_docker_push(image, tag)
+            status = util.run_docker_push(image, tag)
             spinner.stop()
             if status != 0:
                 self.log('Docker image push failed')
@@ -107,8 +99,7 @@ class Kubeb:
         config.add_version(tag, msg)
 
     def push(self, version=None):
-        """ Push docker image to registry
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found')
             return
@@ -122,18 +113,15 @@ class Kubeb:
         self.log('docker push {}:{}'.format(image, deploy_version["tag"]))
 
         spinner.start()
-        status = Command().run_docker_push(image, deploy_version["tag"])
+        status = util.run_docker_push(image, deploy_version["tag"])
         spinner.stop()
         if status != 0:
             self.log('Docker image push failed')
         else:
             self.log('Docker image push succeed.')
 
-    def deploy(self, version, options, dry_run, rollback=False):
-        """ Install current application to Kubernetes
-            Generate Helm chart value file with docker image version
-            If version is not specified, will get the latest version
-        """
+    def deploy(self, version, options, dry_run, rollback=True):
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found')
             return
@@ -153,33 +141,29 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run, options)
+        status = util.run_helm_install(config.get_name(), config.get_template(), dry_run, options)
         spinner.stop()
         if status != 0:
             self.log('Install application failed.')
 
-            if not dry_run and not rollback:
-                self.log('Rollback application to previous version')
-                self.deploy(config.get_last_deploy_version(), options, False, True)
-        else:
+            if dry_run is False and rollback:
+                last_working_revision = util.get_last_working_revision(config.get_name())
+                if not last_working_revision:
+                    self.log('Last working revision not found. Skip rollback')
+                    return
 
-            config.update_last_deploy_version(deploy_version["tag"])
+                self.log('Rollback application to last working revision {}'.format(last_working_revision))
+                self.rollback(last_working_revision)
+        else:
             self.log('Install application succeed.')
 
-    def rollback(self, version, options):
-
-        rollback_version = config.get_previous_version(version)
-
-        self.deploy(rollback_version["tag"], options, False)
-
     def delete(self):
-        """Uninstall current application from Kubernetes
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found')
             return
 
-        status = Command().run_helm_uninstall(config.get_name())
+        status = util.run_helm_uninstall(config.get_name())
         if status != 0:
             self.log('Delete application failed')
             return
@@ -201,10 +185,38 @@ class Kubeb:
         for version in versions:
             self.log('- %s: %s', version['tag'], version['message'])
 
+    def history(self):
+
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
+            return
+
+        self.log('Get application deploy history ...')
+        spinner.start()
+        status = util.run_helm_history(config.get_name())
+        spinner.stop()
+        if status != 0:
+            self.log('Get application deploy history failed.')
+        else:
+            self.log('Get application deploy history succeed.')
+
+    def rollback(self, revision):
+
+        if not file_util.config_file_exist():
+            self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
+            return
+
+        self.log('Rollback application to revision {} ...'.format(revision))
+        spinner.start()
+        status = util.run_helm_rollback(config.get_name(), revision)
+        spinner.stop()
+        if status != 0:
+            self.log('Rollback application to revision failed.')
+        else:
+            self.log('Rollback application to revision succeed.')
+
     def env(self, env):
-        """Use environment
-           Example: kubeb env develop to use environment develop
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
             return
@@ -219,9 +231,7 @@ class Kubeb:
         self.log('Now use %s', env)
 
     def setenv(self, env_vars):
-        """Use environment
-           Example: kubeb env develop to use environment develop
-        """
+
         if not file_util.config_file_exist():
             self.log('Kubeb config file not found in %s', file_util.kubeb_directory)
             return
@@ -230,11 +240,7 @@ class Kubeb:
         config.set_environment_variable(env, env_vars)
 
     def template(self,name, path, force):
-        """Add user template
-            kubeb [template_name] [template_directory_path]
-            Example: kubeb template example ./example
-            Will add template to external template directory: ~/.kubeb/ext-templates/[template_name]
-        """
+
         if file_util.template_exist(name) and not force:
             self.log('Kubeb template found. Please change name or --force')
             return
@@ -244,8 +250,7 @@ class Kubeb:
         self.log('Kubeb template add to %s', click.format_filename(file_util.ext_template_directory))
 
     def destroy(self):
-        """Remove all kubeb configuration
-        """
+
         file_util.clean_up()
 
         self.log('Destroyed config directory %s' % file_util.kubeb_directory)

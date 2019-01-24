@@ -1,48 +1,30 @@
-import os
 import subprocess
-from kubeb import file_util
-
-
-def run(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
-    while True:
-        output = process.stdout.readline()
-        if output == '' and process.poll() is not None:
-            break
-        if output:
-            print(output.strip())
-
-    p_status = process.wait()
-    return p_status
 
 
 class Command(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, command):
+        self._command = command
 
-    def run_docker_build(self, image, tag, path):
-        command = "docker build -t {}:{} {}".format(image, tag, path)
-        return run(command)
+    def execute(self, shell=True, executable=None, printout=True):
+        return self._call(self._command, shell=shell, executable=executable, printout=printout)
 
-    def run_docker_push(self, image, tag):
-        command = "docker push {}:{}".format(image, tag)
-        return run(command)
+    def _call(self, command, shell=True, executable=None, printout=True):
+        process = subprocess.Popen(command,
+                                   stdout=subprocess.PIPE,
+                                   shell=shell,
+                                   executable=executable,
+                                   universal_newlines=True)
 
-    def run_helm_install(self, name, template, debug, options):
-        helm_chart_path = file_util.get_helm_chart_path(template)
-        command = "helm upgrade --install --force {} -f .kubeb/helm-values.yml {} --wait".format(name, helm_chart_path)
+        if printout:
+            while True:
+                stdout = process.stdout.readline()
+                if stdout == '' and process.poll() is not None:
+                    break
+                if stdout:
+                    print(stdout.strip())
 
-        if options:
-            option_str = ','.join(['%s=%s' % (key, value) for (key, value) in options.items()])
-            command += ' --set {}'.format(option_str)
+        output, error = process.communicate()
+        exitcode = process.returncode
 
-        if debug:
-            print(command)
-            command += ' --dry-run --debug'
-
-        return run(command)
-
-    def run_helm_uninstall(self, name):
-        command = "helm delete --purge {}".format(name)
-        return run(command)
+        return exitcode, output, error

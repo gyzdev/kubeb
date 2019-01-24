@@ -109,8 +109,30 @@ $ kubeb delete
       init       Init kubeb configuration Generate config,...
       deploy     Install current application to Kubernetes...
       delete     Uninstall current application from Kubernetes
-      version    Show current application versions
+      version
+      kubeb --help
+    Usage: kubeb [OPTIONS] COMMAND [ARGS]...
+
+    Options:
+      --version  Show the version and exit.
+      --help     Show this message and exit.
+
+    Commands:
+      build     Build current application Build Dockerfile...
+      delete    Uninstall current application from Kubernetes
+      deploy    Install current application to Kubernetes
+      destroy   Remove all kubeb configuration
+      env       Configure kubectl environment
+      history   Show deploy history
+      info      Show current configuration
+      init      Init kubeb configuration
+      push      Push docker image to registry
+      rollback  Rollback release version
+      setenv    Set environment variables
+      template  Add new Kubeb release template
+      version   Show current application versions
   ```
+
 
 ## Initiate your application
 
