@@ -1,4 +1,5 @@
 import os
+import json
 import subprocess
 from kubeb import file_util
 
@@ -14,6 +15,13 @@ def run(command):
 
     p_status = process.wait()
     return p_status
+
+
+def run2(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True, universal_newlines=True)
+    output, err = process.communicate()
+
+    return output, err
 
 
 class Command(object):
@@ -54,3 +62,13 @@ class Command(object):
     def run_helm_rollback(self, image, revision):
         command = "helm rollback {} {}".format(image, revision)
         return run(command)
+
+    def get_last_working_revision(self, name):
+        command = "helm history {} --output json".format(name)
+        output, err = run2(command)
+
+        revisions = json.loads(output)
+
+        revs = [r['revision'] for r in revisions if r['status'] == 'SUPERSEDED']
+
+        return max(revs)
