@@ -7,9 +7,8 @@ import click
 import click_spinner
 spinner = click_spinner.Spinner()
 
-from kubeb import file_util, config
+from kubeb import file_util, config, util
 from .generators import (PodderPipelineGenerator, PodderTaskBeanGenerator, LaravelGenerator)
-from kubeb.command import Command
 
 
 class Kubeb:
@@ -79,7 +78,7 @@ class Kubeb:
         self.log('Building docker image {}:{}...'.format(image, tag))
 
         spinner.start()
-        status = Command().run_docker_build(image, tag, os.getcwd())
+        status = util.run_docker_build(image, tag, os.getcwd())
         spinner.stop()
         if status != 0:
             self.log('Docker image build failed')
@@ -89,7 +88,7 @@ class Kubeb:
 
         if push:
             spinner.start()
-            status = Command().run_docker_push(image, tag)
+            status = util.run_docker_push(image, tag)
             spinner.stop()
             if status != 0:
                 self.log('Docker image push failed')
@@ -114,7 +113,7 @@ class Kubeb:
         self.log('docker push {}:{}'.format(image, deploy_version["tag"]))
 
         spinner.start()
-        status = Command().run_docker_push(image, deploy_version["tag"])
+        status = util.run_docker_push(image, deploy_version["tag"])
         spinner.stop()
         if status != 0:
             self.log('Docker image push failed')
@@ -142,13 +141,17 @@ class Kubeb:
 
         self.log('Installing application ...')
         spinner.start()
-        status = Command().run_helm_install(config.get_name(), config.get_template(), dry_run, options)
+        status = util.run_helm_install(config.get_name(), config.get_template(), dry_run, options)
         spinner.stop()
         if status != 0:
             self.log('Install application failed.')
 
             if dry_run is False and rollback:
-                last_working_revision = Command().get_last_working_revision(config.get_name())
+                last_working_revision = util.get_last_working_revision(config.get_name())
+                if not last_working_revision:
+                    self.log('Last working revision not found. Skip rollback')
+                    return
+
                 self.log('Rollback application to last working revision {}'.format(last_working_revision))
                 self.rollback(last_working_revision)
         else:
@@ -160,7 +163,7 @@ class Kubeb:
             self.log('Kubeb config file not found')
             return
 
-        status = Command().run_helm_uninstall(config.get_name())
+        status = util.run_helm_uninstall(config.get_name())
         if status != 0:
             self.log('Delete application failed')
             return
@@ -190,7 +193,7 @@ class Kubeb:
 
         self.log('Get application deploy history ...')
         spinner.start()
-        status = Command().run_helm_history(config.get_name())
+        status = util.run_helm_history(config.get_name())
         spinner.stop()
         if status != 0:
             self.log('Get application deploy history failed.')
@@ -205,7 +208,7 @@ class Kubeb:
 
         self.log('Rollback application to revision {} ...'.format(revision))
         spinner.start()
-        status = Command().run_helm_rollback(config.get_name(), revision)
+        status = util.run_helm_rollback(config.get_name(), revision)
         spinner.stop()
         if status != 0:
             self.log('Rollback application to revision failed.')
