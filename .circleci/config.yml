@@ -23,33 +23,20 @@ jobs:
             . venv/bin/activate
             pip install -r requirements.txt
             pip install wheel
+            python -m pip install twine
       - save_cache:
           key: v1-dependency-cache-{{ checksum "setup.py" }}
           paths:
             - "venv"
       - run:
-          name: verify git tag vs. version
-          command: |
-            python3 -m venv venv
-            . venv/bin/activate
-            python setup.py verify
-      - run:
           name: init .pypirc
           command: |
-            echo -e "[distutils]" >> ~/.pypirc
-            echo -e "index-servers =" >> ~/.pypirc
-            echo -e "    pypi" >> ~/.pypirc
             echo -e "[pypi]" >> ~/.pypirc
-            echo -e "repository=https://pypi.python.org/pypi" >> ~/.pypirc
-            echo -e "username=$PYPI_USER" >> ~/.pypirc
-            echo -e "password=$PYPI_PASSWORD" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
       - run:
-          name: create packages
+          name: create package & upload to pypi
           command: |
             . venv/bin/activate
             python setup.py sdist bdist_wheel
-      - run:
-          name: upload to pypi
-          command: |
-            . venv/bin/activate
-            python setup.py sdist upload
+            twine upload --skip-existing ./dist/*
