@@ -26,7 +26,15 @@ spec:
             items:
             - key: vhost.conf
               path: vhost.conf
+        - name: laravel-log
+          emptyDir: {}
       containers:
+        - name: laravel-logging-agent
+          image: busybox
+          args: [/bin/sh, -c, 'tail -n0 -F /var/www/html/storage/logs/laravel-`date "+%Y-%m-%d"`.log | xargs -I @ echo "podder.buildserver:["@"]"']
+          volumeMounts:
+          - name: laravel-log
+            mountPath: /var/www/html/storage/logs
         - name: {{ .Chart.Name }}
           image: "{{ .Values.app.repository }}:{{ .Values.app.tag }}"
           imagePullPolicy: {{ .Values.app.pullPolicy }}
@@ -37,6 +45,8 @@ spec:
             - name: apache-conf
               mountPath: /etc/apache2/sites-enabled/vhost.conf
               subPath: vhost.conf
+            - name: laravel-log
+              mountPath: /var/www/html/storage/logs
           ports:
             - name: http
               containerPort: 80
