@@ -31,7 +31,7 @@ spec:
       containers:
         - name: laravel-logging-agent
           image: busybox
-          args: [/bin/sh, -c, 'tail -n0 -F /var/www/html/storage/logs/laravel-`date "+%Y-%m-%d"`.log | xargs -I @ echo "podder.buildserver:["@"]"']
+          args: [/bin/sh, -c, 'tail -n0 -F /var/www/html/storage/logs/laravel-`date "+%Y-%m-%d"`.log | xargs -I @ echo "{{ template "laravel.fullname" . }}:["@"]"']
           volumeMounts:
           - name: laravel-log
             mountPath: /var/www/html/storage/logs
